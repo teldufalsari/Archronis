@@ -61,7 +61,6 @@ int rat_pack(int count, char* names[])
         delete[] metadata;
         return state;
     }
-
     std::ofstream output_fs(arch_name);
     if (!output_fs.is_open()) {
         std::cout << "Could not open file '" << arch_name << "' for writing the archive" << std::endl;
@@ -82,10 +81,13 @@ int rat_pack(int count, char* names[])
         std::uintmax_t whole_blocks_count = metadata[i].size / RAT_BLOCK_SIZE;
         std::uintmax_t remainder_size = metadata[i].size % RAT_BLOCK_SIZE;
         for (std::uintmax_t j = 0; j < whole_blocks_count; j++) {
+            // Wrap read/write in a function and add stream state checks
             input_fs.read(data_buffer, RAT_BLOCK_SIZE);
             output_fs.write(data_buffer, RAT_BLOCK_SIZE);
         }
         if (remainder_size != 0) {
+            // Wrap read/write in a function and add stream state checks
+            // And add read/write checks everywhere
             input_fs.read(data_buffer, remainder_size);
             output_fs.write(data_buffer, remainder_size);
         }
@@ -181,6 +183,8 @@ int rat_unpack(const char* name)
             output_fs.write(data_buffer, RAT_BLOCK_SIZE);
         }
         if (remainder_size != 0) {
+            // It's the fourth time this r/w is taken
+            // i strongly recommend using a function
             input_fs.read(data_buffer, remainder_size);
             output_fs.write(data_buffer, remainder_size);
         }

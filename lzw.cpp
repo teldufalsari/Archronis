@@ -144,6 +144,7 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
     uintmax_t packed_buf_size = BLOCK_SIZE / 2;
     auto packed_buf = new unsigned char[packed_buf_size];
     for (std::uintmax_t i = 0; i < whole_blocks_count; i++) {
+        // Wraparound function here
         input_fs.read(data_buf, BLOCK_SIZE);
         compress(data_buf, BLOCK_SIZE, compressed_buf);
         std::uintmax_t codon_count = compressed_buf.size();
@@ -162,6 +163,7 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
         compressed_buf.clear();
     }
     if (remainder_size != 0) {
+        // And here
         input_fs.read(data_buf, remainder_size);
         compress(data_buf, remainder_size, compressed_buf);
         std::uintmax_t codon_count = compressed_buf.size();
@@ -174,6 +176,7 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
             packed_buf_size = packed_size;
         }
         pack(compressed_buf, packed_buf);
+        // Check stream state
         outfupt_fs.write((char*)&codon_count, sizeof(codon_count));
         outfupt_fs.write((char*)&packed_size, sizeof(packed_size));
         outfupt_fs.write((char*)packed_buf, packed_size);
@@ -185,6 +188,7 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
 
 int decompress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs)
 {
+    // As everywhere, read/write checks
     std::uintmax_t blocks_count = 0;
     input_fs.read((char*)&blocks_count, sizeof(blocks_count));
     unsigned char* packed_buf = nullptr;
