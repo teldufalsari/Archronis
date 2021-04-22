@@ -93,7 +93,7 @@ public:
      */
     map_t(map_t&& that) noexcept;
     ~map_t();
-    
+
     /**
      * @brief Inserts pair of suitable type into a map.
      * @param _x Reference to the pair object.
@@ -276,7 +276,7 @@ inline bool operator ==(const pair_t<KeyT, ValT>& lht, const pair_t<KeyT, ValT>&
 {
     return (lht._p_key == rht._p_key);
 }
-    
+
 }// namespace tld
 
 #endif //TLD_MAP_H

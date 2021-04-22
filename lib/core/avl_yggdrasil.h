@@ -25,24 +25,24 @@ public:
     {
         /// Value stored in the node.
         T _n_value;
-        
+
         /// Height of the subtree with a root in this node.
         unsigned char height;
-        
+
         /// Pointer to the left child node.
         tree_node* left;
-        
+
         /// Pointer to the parent node.
         tree_node* parent;
-        
+
         /// Pointer to the right child node.
         tree_node* right;
-        
+
         /**
          * @brief Creates an empty node of height 1.
          */
         tree_node();
-        
+
         /**
          * @brief Copy constructor.
          * @param that Reference to the source object.
@@ -51,7 +51,7 @@ public:
 
         /**
          * @brief Trivial destructor.
-         */        
+         */
         ~tree_node();
     };
 
@@ -88,12 +88,12 @@ public:
      * @param that Reference to the source object.
      */
     avl_tree(const avl_tree& that);
-    
+
     /**
      * @brief Recursively frees allocated memory.
      */
     ~avl_tree();
-    
+
     /**
      * @brief Copy assignment operator for a tree.
      * @param that Reference to the source object.
@@ -107,12 +107,12 @@ public:
      * @return Pointer to the node containing the element inserted.
      */
     tree_node* Insert(const T& new_value);
-    
+
     /**
      * @brief Clear the tree: recursively frees allocated memory and sets root pointer null.
      */
     void Destroy();
-    
+
     /**
      * @brief Retrieves a value with specified key.
      * @param key Key of the element.
@@ -123,7 +123,7 @@ public:
     /**
      * @brief Removes the element with specified key from the container.
      * @param key Key of the element.
-     */    
+     */
     void FindAndRemove(const T& key);
 };
 
@@ -333,7 +333,6 @@ typename avl_tree<T>::tree_node* avl_tree<T>::Insert(avl_tree::tree_node** node,
         (*node)->right->parent = *node;
     Balance(*node);
     return new_node;
-    
 }
 
 template <typename T>
@@ -468,6 +467,6 @@ inline bool operator ==(const avl_tree<T>& lht, const avl_tree<T>& rht)
 {
     return (lht.root_ == rht.root_);
 }
-    
+
 } //namespace tld
 #endif //CORE_AVL_YGGDRASIL_H

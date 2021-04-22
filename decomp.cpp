@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
         std::cout << "Usage: " << argv[0] << " [filename]" << std::endl;
         return ERR_NO_FILE;
     }
-    fs::path filepath(argv[1]); 
+    fs::path filepath(argv[1]);
     if (!fs::exists(filepath)) {
         std::cout << "File '" << filepath << "' does not exist" << std::endl;
         return ERR_NO_FILE;
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
         case ERR_ALLOC:
             std::cout << "Could not allocate memory for file decoding" << std::endl;
             break;
-        
+
         case ERR_DECODE:
             std::cout << "Could not decompress: the file is possibly corrupted" << std::endl;
         default:

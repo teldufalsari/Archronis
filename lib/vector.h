@@ -7,7 +7,7 @@ namespace tld {
  * @tparam T data type stored in vector
  */
 template <typename T>
-class vector 
+class vector
 {
 const size_t DEFAULT_CAPACITY = 16UL;
 
@@ -96,7 +96,7 @@ public:
     /// @brief Get access to the underlying data array
     const T* data() const;
 
-    /// @brief Destruct all stored elements and free all allocated memory 
+    /// @brief Destruct all stored elements and free all allocated memory
     void clear();
 
     /**

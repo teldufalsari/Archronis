@@ -120,7 +120,7 @@ int rat_unpack(const char* name)
     std::string arch_name(name);
     if (!fs::exists(arch_name)) {
         std::cout << "File '" << arch_name << "' does not exist" << std::endl;
-        return ERR_NO_FILE; 
+        return ERR_NO_FILE;
     }
     if (!fs::is_regular_file(arch_name)) {
         std::cout << "File '" << arch_name << "' can't be an archive file: not a regular file" << std::endl;
@@ -136,7 +136,7 @@ int rat_unpack(const char* name)
     if (signature != *((const std::uintmax_t*)&RAT_SIGNATURE)) {
         std::cout << "File '" << arch_name << "' is not a valid archive file" << std::endl;
         return ERR_NOT_ARCH;
-    } 
+    }
     int file_count = 0;
     input_fs.read((char*)&file_count, sizeof(file_count));
     rat_metadata cur_metadata = {};
@@ -163,7 +163,6 @@ int rat_unpack(const char* name)
                 std::cout << "reached end" << std::endl;
             else
                 std::cout << "failbit set" << std::endl;
-            
             return ERR_READ;
         }
         cur_name_buf[cur_metadata.name_size] = '\0';
