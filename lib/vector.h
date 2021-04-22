@@ -1,9 +1,6 @@
 #ifndef TLD_VECTOR_H
 #define TLD_VECTOR_H
 
-#include <cstring>
-#include <iostream>
-
 namespace tld {
 /**
  * @brief A random-access container with automatically allocated memory
@@ -276,7 +273,6 @@ template <typename T>
 void vector<T>::pop_back()
 {
     if (size_ > 0) {
-        std::cout << "I'm calling the police!" << std::endl;
         m_data_[size_ - 1].~T();
         size_--;
     }

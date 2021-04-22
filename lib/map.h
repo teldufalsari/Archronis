@@ -147,17 +147,19 @@ public:
      * the destination object.
      */
     map_t& operator =(const map_t& that);
-};
 
-/**
- * @brief Comparision operator for map type.
- * @param lht Left operand.
- * @param rht Right operand.
- * @return The result of comparision of the trees.
- * @details It is used to avoid self-assignment.
- */
-template <typename KeyT, typename ValT>
-inline bool operator ==(const map_t<KeyT, ValT>& lht, const map_t<KeyT, ValT>& rht);
+    /**
+     * @brief Comparision operator for map type.
+     * @param lht Left operand.
+     * @param rht Right operand.
+     * @return The result of comparision of the trees.
+     * @details It is used to avoid self-assignment.
+     */
+    friend inline bool operator ==(const map_t<KeyT, ValT>& lht, const map_t<KeyT, ValT>& rht)
+    {
+        return (lht.m_tree_ == rht.m_tree_);
+    }
+};
 
 
 // ### PAIR ###
@@ -273,12 +275,6 @@ template <typename KeyT, typename ValT>
 inline bool operator ==(const pair_t<KeyT, ValT>& lht, const pair_t<KeyT, ValT>& rht)
 {
     return (lht._p_key == rht._p_key);
-}
-
-template <typename KeyT, typename ValT>
-inline bool operator ==(const map_t<KeyT, ValT>& lht, const map_t<KeyT, ValT>& rht)
-{
-    return (lht.m_tree_ == rht.m_tree_);
 }
     
 }// namespace tld
