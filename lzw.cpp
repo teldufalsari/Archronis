@@ -62,6 +62,7 @@ void compress(const char* input, size_t input_size, tld::vector<pos_t>& result)
     for (pos_t i = 0; i < dict_size; i++)
         dict[std::string(1, i)] = i;
     std::string buffer, bc;
+    result.clear();
     for (size_t i = 0; i < input_size; i++) {
         char c = input[i];
         bc = buffer + c;
