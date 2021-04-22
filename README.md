@@ -35,6 +35,7 @@ As for now, file access mode and last modification time are preserved.
 
 ### usage
 ./rat pack file1 [file2] [file3] ... output_file
+
 ./rat unpack archive_file
 
 ---
