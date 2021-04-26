@@ -5,8 +5,9 @@
 #include "lzw.hpp"
 namespace fs = std::filesystem;
 
-const std::uintmax_t RAT_BLOCK_SIZE = 4096UL * 32UL;
 const char RAT_SIGNATURE[8] = "krysa02";
+const char COMPRESSED_SIGNATURE[8] = "rat03cp";
+const char ARCHIVED_SIGNATURE[8] = "rat03ar";
 
 struct rat_metadata {
     fs::file_status status;
@@ -17,7 +18,8 @@ struct rat_metadata {
 
 int rat_pack(int count, char* names[]);
 int rat_unpack(const char* name);
-int gather_metadata(rat_metadata* buffer, std::string* names, int count);
+int gather_metadata(tld::vector<rat_metadata>& meta, const tld::vector<std::string> names);
+int compress_file(const std::string& name, const rat_metadata& metadata, std::ofstream& output_fs);
 
 int main(int argc, char* argv[])
 {
@@ -43,22 +45,21 @@ int main(int argc, char* argv[])
 
 int rat_pack(int count, char* names[])
 {
-    int file_count = count - 1;
-    auto file_names = new std::string[file_count];
-    for (int i = 0; i < file_count; i++)
-        file_names[i] = names[i];
-    std::string arch_name(names[file_count]);
-    for (int i = 0; i < file_count; i++)
-        if (!fs::exists(names[i])) {
-            std::cout << "Could not create archive: file '" << file_names[i] << "' does not exist" << std::endl;
+    int input_count = count - 1;
+    tld::vector<std::string> input_names;
+    for (int i = 0; i < input_count; i++)
+        input_names.push_back(names[i]);
+    std::string arch_name(names[input_count]);
+    for (size_t i = 0; i < input_names.size(); i++)
+        if (!fs::exists(input_names[i])) {
+            std::cout << "Could not create archive: file '" << input_names[i] << "' does not exist" << std::endl;
             return ERR_NO_FILE;
         }
-    auto metadata = new rat_metadata[file_count];
+    tld::vector<rat_metadata> metadata_v;
     // add try/catch block here
-    int state = gather_metadata(metadata, file_names, file_count);
+    int state = gather_metadata(metadata_v, input_names);
     if (state != OK) {
         std::cout << "Could not create archive: only regular files are allowed" << std::endl;
-        delete[] metadata;
         return state;
     }
     std::ofstream output_fs(arch_name);
@@ -67,42 +68,43 @@ int rat_pack(int count, char* names[])
         return ERR_OPEN;
     }
     output_fs.write(RAT_SIGNATURE, sizeof(RAT_SIGNATURE));
-    output_fs.write((char*)&file_count, sizeof(file_count));
-    auto data_buffer = new char[RAT_BLOCK_SIZE];
-    for (int i = 0; i < file_count; i++) {
-        output_fs.write((char*)&metadata[i], sizeof(rat_metadata));
-        output_fs.write(file_names[i].c_str(), file_names[i].size());
-        std::ifstream input_fs(file_names[i]);
-        if (!input_fs.is_open()) {
-            std::cout << "Could not open file '" << file_names[i] << "' for reading" << std::endl;
-            delete[] metadata;
-            return ERR_READ;
+    output_fs.write((char*)&input_count, sizeof(input_count));
+    for (std::size_t i = 0; i < input_names.size(); i++) {
+        state = compress_file(input_names[i], metadata_v[i], output_fs);
+        if (state != OK) {
+            std::cout << "Could not compress file '" << input_names[i] << '\'' << std::endl;
+            return state;
         }
-        int state = compress_all(input_fs, output_fs, metadata[i].size);
-        if (state != OK)
-            return state; //NOOOOO! Do something!!
-        input_fs.close();
     }
-    delete[] file_names;
-    delete[] data_buffer;
-    delete[] metadata;
-    output_fs.close();
     return OK;
 }
 
-int gather_metadata(rat_metadata* buffer, std::string* names, int count)
+int compress_file(const std::string& name, const rat_metadata& metadata, std::ofstream& output_fs)
+{
+    std::ifstream input_fs(name);
+    if (!input_fs.is_open()) {
+        return ERR_OPEN;
+    }
+    output_fs.write((const char*)&metadata, sizeof(metadata));
+    output_fs.write(name.c_str(), name.size());
+    return compress_all(input_fs, output_fs, metadata.size);
+}
+
+int gather_metadata(tld::vector<rat_metadata>& meta, const tld::vector<std::string> names)
 {
     int ret = OK;
-    for (int i = 0; i < count; i++) {
-        buffer[i].status = fs::status(names[i]);
-        if (buffer[i].status.type() != fs::file_type::regular) {
+    rat_metadata buffer = {};
+    for (std::size_t i = 0; i < names.size(); i++) {
+        buffer.status = fs::status(names[i]);
+        if (buffer.status.type() != fs::file_type::regular) {
             std::cout << "File '" << names[i] << "' is not a regular file" << std::endl;
             ret = ERR_NOT_REG;
             continue;
         }
-        buffer[i].size = fs::file_size(names[i]);
-        buffer[i].last_mod_time = fs::last_write_time(names[i]);
-        buffer[i].name_size = names[i].size();
+        buffer.size = fs::file_size(names[i]);
+        buffer.last_mod_time = fs::last_write_time(names[i]);
+        buffer.name_size = names[i].size();
+        meta.push_back(buffer);
     }
     return ret;
 }
@@ -132,7 +134,6 @@ int rat_unpack(const char* name)
     int file_count = 0;
     input_fs.read((char*)&file_count, sizeof(file_count));
     rat_metadata cur_metadata = {};
-    auto data_buffer = new char[RAT_BLOCK_SIZE];
     for (int i = 0; i < file_count; i++) {
         input_fs.read((char*)&cur_metadata, sizeof(cur_metadata));
         if (!input_fs.good()) {
@@ -163,7 +164,6 @@ int rat_unpack(const char* name)
         std::ofstream output_fs(cur_name);
         if (!output_fs.is_open()) {
             std::cout << "Could not create file '" << cur_name << '\'' << std::endl;
-            delete[] data_buffer;
             return ERR_OPEN;
         }
         int state = decompress_all(input_fs, output_fs);
@@ -179,6 +179,5 @@ int rat_unpack(const char* name)
         if (errc.value())
             std::cout << "Failed to modify last modification time for file '" << cur_name << '\'' << std::endl;
     }
-    delete[] data_buffer;
     return OK;
 }
