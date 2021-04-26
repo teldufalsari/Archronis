@@ -3,7 +3,7 @@ CC = clang++
 CFLAGS = -Wall -Wextra -Wnarrowing -Wfloat-equal -Wundef -Wshadow
 CFLAGS += -Wunreachable-code -Wpointer-arith -Wcast-align
 CFLAGS += -Wwrite-strings -Wswitch-default -Wswitch-enum -Winit-self -Wcast-qual
-CFLAGS += -std=c++17
+CFLAGS += -std=c++17 -g
 
 all: compress decomp rat
 
