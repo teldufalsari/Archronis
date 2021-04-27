@@ -1,5 +1,5 @@
-#ifndef JACKAL_LZW_H
-#define JACKAL_LZW_H
+#ifndef RAT_LZW_H
+#define RAT_LZW_H
 #include <string>
 #include "lib/map.h"
 #include "lib/vector.h"
@@ -114,4 +114,4 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
  */
 int decompress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs);
 
-#endif // JACKAL_LZW_H
+#endif // RAT_LZW_H

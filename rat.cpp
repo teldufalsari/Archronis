@@ -5,7 +5,6 @@
 #include "lzw.hpp"
 namespace fs = std::filesystem;
 
-const char RAT_SIGNATURE[8] = "krysa02";
 const char COMPRESSED_SIGNATURE[8] = "rat03cp";
 const char ARCHIVED_SIGNATURE[8] = "rat03ar";
 
@@ -50,16 +49,11 @@ int rat_pack(int count, char* names[])
     for (int i = 0; i < input_count; i++)
         input_names.push_back(names[i]);
     std::string arch_name(names[input_count]);
-    for (size_t i = 0; i < input_names.size(); i++)
-        if (!fs::exists(input_names[i])) {
-            std::cout << "Could not create archive: file '" << input_names[i] << "' does not exist" << std::endl;
-            return ERR_NO_FILE;
-        }
     tld::vector<rat_metadata> metadata_v;
     // add try/catch block here
     int state = gather_metadata(metadata_v, input_names);
     if (state != OK) {
-        std::cout << "Could not create archive: only regular files are allowed" << std::endl;
+        std::cout << "Could not create an archive due to previous errors" << std::endl;
         return state;
     }
     std::ofstream output_fs(arch_name);
@@ -67,7 +61,7 @@ int rat_pack(int count, char* names[])
         std::cout << "Could not open file '" << arch_name << "' for writing the archive" << std::endl;
         return ERR_OPEN;
     }
-    output_fs.write(RAT_SIGNATURE, sizeof(RAT_SIGNATURE));
+    output_fs.write(COMPRESSED_SIGNATURE, sizeof(COMPRESSED_SIGNATURE));
     output_fs.write((char*)&input_count, sizeof(input_count));
     for (std::size_t i = 0; i < input_names.size(); i++) {
         state = compress_file(input_names[i], metadata_v[i], output_fs);
@@ -95,6 +89,11 @@ int gather_metadata(tld::vector<rat_metadata>& meta, const tld::vector<std::stri
     int ret = OK;
     rat_metadata buffer = {};
     for (std::size_t i = 0; i < names.size(); i++) {
+        if (!fs::exists(names[i])) {
+            std::cout << "File '" << names[i] << "' does not exist" << std::endl;
+            ret = ERR_NO_FILE;
+            continue;
+        }
         buffer.status = fs::status(names[i]);
         if (buffer.status.type() != fs::file_type::regular) {
             std::cout << "File '" << names[i] << "' is not a regular file" << std::endl;
@@ -127,7 +126,7 @@ int rat_unpack(const char* name)
     }
     std::uintmax_t signature = 0;
     input_fs.read((char*)&signature, sizeof(signature));
-    if (signature != *((const std::uintmax_t*)&RAT_SIGNATURE)) {
+    if (signature != *((const std::uintmax_t*)&COMPRESSED_SIGNATURE)) {
         std::cout << "File '" << arch_name << "' is not a valid archive file" << std::endl;
         return ERR_NOT_ARCH;
     }
