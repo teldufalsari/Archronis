@@ -13,5 +13,6 @@ It uses classic LZW algoritm published by Terry Welch in 1984, which encodes seq
 ## Features
 * only regular files are supported: no symlinks, fifos and other special files
 * file access mode and last modification time are preserved
+* CRC-32 checksum of each compressed block is calculated
 * text files, source code and binaries can be compressed with excellent ratio
 * alredy compressed data is usually compressed with poor ratio or even inflates
