@@ -9,7 +9,7 @@ int decompress(const pos_t* input, size_t input_size, std::string& result)
     try {
         for (pos_t i = 0; i < dict_size; i++)
             dict[i] = new std::string(1, i);
-    } catch(std::bad_alloc) {
+    } catch(std::bad_alloc&) {
         for (pos_t i = 0; i < dict_size; i++)
             delete dict[i];
         return ERR_ALLOC;
@@ -34,7 +34,7 @@ int decompress(const pos_t* input, size_t input_size, std::string& result)
             if (dict_size < TABLE_SIZE) {
                 dict[dict_size++] = new std::string(w + buffer[0]);
             }
-        } catch(std::bad_alloc) {
+        } catch(std::bad_alloc&) {
             for (pos_t j = 0; j < dict_size; j++)
                 delete dict[j];
             return ERR_ALLOC;
@@ -112,25 +112,6 @@ void pack(tld::vector<pos_t>& input, unsigned char* output)
         input.pop_back();
 }
 
-int check_and_open(const fs::path& filepath, std::ifstream& input_filestream)
-{
-    if (!fs::exists(filepath)) {
-        std::cout << "File '" << filepath << "' does not exist" << std::endl;
-        return ERR_NO_FILE;
-    }
-    fs::file_status this_status = fs::status(filepath);
-    if (this_status.type() != fs::file_type::regular) {
-        std::cout << "File '" << filepath << "' cannot be compressed: not a regular file" << std::endl;
-        return ERR_NOT_REG;
-    }
-    input_filestream.open(filepath);
-    if (!input_filestream.is_open()) {
-        std::cout << "Could not open file '" << filepath << '\'' << std::endl;
-        return ERR_FS_ERROR;
-    }
-    return OK;
-}
-
 int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintmax_t file_size)
 {
     std::uintmax_t whole_blocks_count = file_size / BLOCK_SIZE;
@@ -158,9 +139,11 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
             packed_buf_size = packed_size;
         }
         pack(compressed_buf, packed_buf);
+        unsigned checksum = crc32(packed_buf, packed_buf_size);
         outfupt_fs.write((char*)&codon_count, sizeof(codon_count));
         outfupt_fs.write((char*)&packed_size, sizeof(packed_size));
         outfupt_fs.write((char*)packed_buf, packed_size);
+        outfupt_fs.write((char*)&checksum, sizeof(checksum));
         compressed_buf.clear();
     }
     if (remainder_size != 0) {
@@ -177,10 +160,12 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
             packed_buf_size = packed_size;
         }
         pack(compressed_buf, packed_buf);
+        unsigned checksum = crc32(packed_buf, packed_size);
         // Check stream state
         outfupt_fs.write((char*)&codon_count, sizeof(codon_count));
         outfupt_fs.write((char*)&packed_size, sizeof(packed_size));
         outfupt_fs.write((char*)packed_buf, packed_size);
+        outfupt_fs.write((char*)&checksum, sizeof(checksum));
     }
     delete[] packed_buf;
     delete[] data_buf;
@@ -194,6 +179,7 @@ int decompress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs)
     input_fs.read((char*)&blocks_count, sizeof(blocks_count));
     unsigned char* packed_buf = nullptr;
     std::uintmax_t packed_buf_size = 0;
+    unsigned read_checksum = 0;
     for (std::uintmax_t i = 0; i < blocks_count; i++) {
         std::uintmax_t codon_count = 0, packed_size = 0;
         input_fs.read((char*)&codon_count, sizeof(codon_count));
@@ -204,6 +190,12 @@ int decompress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs)
             packed_buf = new unsigned char[packed_buf_size];
         }
         input_fs.read((char*)packed_buf, packed_size);
+        input_fs.read((char*)&read_checksum, sizeof(read_checksum));
+        unsigned my_checksum = crc32(packed_buf, packed_size);
+        if (read_checksum != my_checksum) {
+            delete[] packed_buf;
+            return ERR_CRC;
+        }
         pos_t* compressed_buf = unpack(codon_count, packed_buf);
         std::string decompressed_data;
         int state = decompress(compressed_buf, codon_count, decompressed_data);
@@ -217,3 +209,40 @@ int decompress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs)
     delete[] packed_buf;
     return OK;
 }
+
+namespace tld {
+static void crc_generate_table(unsigned* table)
+{
+    for (unsigned i = 0; i < 256; i++) {
+        unsigned remainder = i;
+        for (unsigned j = 0; j < 8; j++) {
+            if ((remainder & 1u) != 0) {
+                remainder >>= 1u;
+                remainder ^= 0xedb88320u;
+            } else {
+                remainder >>= 1u;
+            }
+        }
+        table[i] = remainder;
+    }
+}
+
+unsigned crc32(const unsigned char *data_buf, std::size_t data_size)
+{
+    static unsigned table[256] = {};
+    static bool have_table = false;
+    if (!have_table) {
+        crc_generate_table(table);
+        have_table = true;
+    }
+    unsigned crc = 0xffffffffu;
+    unsigned char octet = 0;
+    const unsigned char* q = data_buf + data_size;
+    for (const unsigned char* p = data_buf; p < q; p++) {
+        octet = *p;
+        crc = (crc >> 8) ^ table[(crc & 0xffu) ^ octet];
+    }
+    return ~crc;
+}
+
+} // namespace tld

@@ -10,7 +10,7 @@ all: rat
 lzw.o: lzw.cpp lzw.hpp
 	$(CC) $(CFLAGS) -c lzw.cpp
 
-rat: rat.o
+rat: rat.o lzw.o
 	$(CC) rat.o lzw.o -o rat.exe
 
 rat.o: rat.cpp

@@ -19,6 +19,7 @@ int rat_pack(int count, char* names[]);
 int rat_unpack(const char* name);
 int gather_metadata(tld::vector<rat_metadata>& meta, const tld::vector<std::string> names);
 int compress_file(const std::string& name, const rat_metadata& metadata, std::ofstream& output_fs);
+void rat_perror(const std::string& file_name, int err_code);
 
 int main(int argc, char* argv[])
 {
@@ -166,8 +167,10 @@ int rat_unpack(const char* name)
             return ERR_OPEN;
         }
         int state = decompress_all(input_fs, output_fs);
-        if (state != OK)
+        if (state != OK) {
+            rat_perror(cur_name, state);
             return state;
+        }
         output_fs.close();
         // set metadata
         std::error_code errc;
@@ -179,4 +182,40 @@ int rat_unpack(const char* name)
             std::cout << "Failed to modify last modification time for file '" << cur_name << '\'' << std::endl;
     }
     return OK;
+}
+
+void rat_perror(const std::string& file_name, int err_code)
+{
+    switch (err_code) {
+    case ERR_NO_COMMAND:
+        std::cout << "File '" << file_name << "' does not exist" << std::endl;
+        break;
+    case ERR_OPEN:
+        std::cout << "Could not open file '" << file_name << '\'' << std::endl;
+        break;
+    case ERR_NOT_REG:
+        std::cout << "File '" << file_name << "' is not regular" << std::endl;
+        break;
+    case ERR_ALLOC:
+        std::cout << "Could not allocate memory to handle file '" << file_name << '\'' << std::endl;
+        break;
+    case ERR_READ:
+        std::cout << "Could not read data from file '" << file_name << '\'' << std::endl;
+        break;
+    case ERR_WRITE:
+        std::cout << "Could not write data to file '" << file_name << '\'' << std::endl;
+        break;
+    case ERR_DECODE:
+        std::cout << "Could not decode file '" << file_name << "', it appears to be corrupted" << std::endl;
+        break;
+    case ERR_NOT_ARCH:
+        std::cout << "File '" << file_name << "' is not signed as an archive, I won't touch it" << std::endl;
+        break;
+    case ERR_CRC:
+        std::cout << "Checksum error: file '" << file_name << "' in the arcive appears to be corrupted" << std::endl;
+        break;
+    default:
+        std::cout << "Unknown error occured while processing file '" << file_name << '\'' << std::endl;
+        break;
+    }
 }

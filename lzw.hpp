@@ -20,7 +20,8 @@ enum errors {
     ERR_READ,
     ERR_WRITE,
     ERR_DECODE,
-    ERR_NOT_ARCH
+    ERR_NOT_ARCH,
+    ERR_CRC
 };
 
 const std::string EMPTY_STR = std::string();
@@ -90,16 +91,6 @@ static inline void unpack_pair(const unsigned char* in_buf, pos_t* out_buf)
 }
 
 /**
- * @brief Check if file pointed by filepath is compressable and open it if it is
- * @param filepath Path to the file
- * @param input_filestream input filestream object that would be opened on success
- * to read from filepath
- * @return On success, zero is returnes.
- * Otherwise, non-zero error word is returned.
- */
-int check_and_open(const fs::path& filepath, std::ifstream& input_filestream);
-
-/**
  * @brief Compress file_size bytes from input_fs and write compressed and packed data
  * into output_fs.
  * Number of 12-bit code words is written in first 8 bytes before the data.
@@ -109,9 +100,22 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
 /**
  * @brief Read packed and compressed data from input_fs and write
  * decompressed data intp output_fs.
- * The first 8 bytes of input_fs must be the numbe of 12-bit code words in
+ * The first 8 bytes of input_fs must be the number of 12-bit code words in
  * packed file.
  */
 int decompress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs);
+
+/**
+ * @brief Calculate a bytewise CRC-32 checksum of given array
+ * @param data_buf data buffer
+ * @param data_size size of given array in bytes
+ */
+unsigned crc32(const unsigned char *data_buf, std::size_t data_size);
+
+/**
+ * @brief Generate table for calculating CRC-32 checksum
+ * @details It is used by crc32 function and must be used only by it.
+ */
+static void crc_generate_table(unsigned* table);
 
 #endif // RAT_LZW_H
