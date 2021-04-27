@@ -19,23 +19,45 @@ struct pair_t {
      * @brief Default constructor. Calls default constructors of key type and value type.
      */
     pair_t();
+
     /**
      * @brief Crates a pair with default value and a key provided.
      * @param nkey New key.
      */
     explicit pair_t(const KeyT& nkey);
+
     /**
      * @brief Creates a pair with a key and a value provided.
      * @param nkey New key.
      * @param nvalue New value.
      */
     pair_t(const KeyT& nkey, const ValT& nvalue);
+
     ~pair_t();
+
     /**
      * @brief Copy constructor for pair class.
      * @param that Reference to the source object.
      */
     pair_t(const pair_t&);
+
+    /**
+     * @brief Move constructor for pair class.
+     * @param that Reference to the source object.
+     */
+    pair_t(pair_t&& that) noexcept;
+
+    /**
+     * @brief Copy assignment operator
+     * @param that Reference to the source object.
+     */
+    pair_t& operator =(const pair_t& that);
+
+    /**
+     * @brief Move assignment operator
+     * @param that Reference to the source object.
+     */
+    pair_t& operator =(pair_t&& that) noexcept;
 };
 
 /**
@@ -149,6 +171,12 @@ public:
     map_t& operator =(const map_t& that);
 
     /**
+     * @brief Move assignment operator
+     * @param that Reference to the source object.
+     */
+    map_t& operator =(map_t&& that) noexcept;
+
+    /**
      * @brief Comparision operator for map type.
      * @param lht Left operand.
      * @param rht Right operand.
@@ -165,22 +193,51 @@ public:
 // ### PAIR ###
 
 template <typename KeyT, typename ValT>
-pair_t<KeyT, ValT>::pair_t() : _p_key(), _p_value()
+pair_t<KeyT, ValT>::pair_t() :
+    _p_key(),
+    _p_value()
 {}
 
 template <typename KeyT, typename ValT>
-pair_t<KeyT, ValT>::pair_t(const KeyT& nkey) : _p_key(nkey), _p_value()
+pair_t<KeyT, ValT>::pair_t(const KeyT& nkey) :
+    _p_key(nkey),
+    _p_value()
 {}
 
 template <typename KeyT, typename ValT>
-pair_t<KeyT, ValT>::pair_t(const KeyT& nkey, const ValT& nvalue) : _p_key(nkey), _p_value(nvalue)
+pair_t<KeyT, ValT>::pair_t(const KeyT& nkey, const ValT& nvalue) :
+    _p_key(nkey),
+    _p_value(nvalue)
 {}
 
 template <typename KeyT, typename ValT>
-pair_t<KeyT, ValT>::pair_t(const pair_t& that)
+pair_t<KeyT, ValT>::pair_t(const pair_t& that) :
+    _p_key(that._p_key),
+    _p_value(that._p_value)
+{}
+
+template <typename KeyT, typename ValT>
+pair_t<KeyT, ValT>::pair_t(pair_t&& that) noexcept :
+    _p_key(std::move(that._p_key)),
+    _p_value(std::move(that._p_value))
+{}
+
+template <typename KeyT, typename ValT>
+pair_t<KeyT, ValT>& pair_t<KeyT, ValT>::operator =(const pair_t& that)
 {
-    this->_p_key = that._p_key;
-    this->_p_value = that._p_value;
+    if (this != &that) {
+        this->_p_key = that._p_key;
+        this->_p_value = that._p_value;
+    }
+    return *this;
+}
+
+template <typename KeyT, typename ValT>
+pair_t<KeyT, ValT>& pair_t<KeyT, ValT>::operator =(pair_t&& that) noexcept
+{
+    this->_p_key = std::move(that._p_key);
+    this->_p_value = std::move(that._p_value);
+    return *this;
 }
 
 template <typename KeyT, typename ValT>
@@ -236,10 +293,21 @@ map_t<KeyT, ValT>& map_t<KeyT, ValT>::operator =(const map_t& that)
 }
 
 template <typename KeyT, typename ValT>
-map_t<KeyT, ValT>::map_t(const map_t& that)
+map_t<KeyT, ValT>& map_t<KeyT, ValT>::operator =(map_t&& that) noexcept
 {
-    this->m_tree_ = that.m_tree_;
+    this->m_tree_ = std::move(that.m_tree_);
+    return *this;
 }
+
+template <typename KeyT, typename ValT>
+map_t<KeyT, ValT>::map_t(const map_t& that) :
+    m_tree_(that.m_tree_)
+{}
+
+template <typename KeyT, typename ValT>
+map_t<KeyT, ValT>::map_t(map_t&& that) noexcept :
+    m_tree_(std::move(that.m_tree_))
+{}
 
 template <typename KeyT, typename ValT>
 void map_t<KeyT, ValT>::Erase(const KeyT& key)

@@ -90,6 +90,12 @@ public:
     avl_tree(const avl_tree& that);
 
     /**
+     * @brief Move constructor for a tree.
+     * @param that Reference to the source object.
+     */
+    avl_tree(avl_tree&& that) noexcept;
+
+    /**
      * @brief Recursively frees allocated memory.
      */
     ~avl_tree();
@@ -100,6 +106,13 @@ public:
      * @return Reference to the tree object to create assignment chains.
      */
     avl_tree& operator =(const avl_tree& that);
+
+    /**
+     * @brief Move assignment operator for a tree.
+     * @param that Reference to the source object.
+     * @return Reference to the tree object to create assignment chains.
+     */
+    avl_tree& operator =(avl_tree&& that) noexcept;
 
     /**
      * @brief Inserts a new element into the container.
@@ -161,15 +174,23 @@ avl_tree<T>::tree_node::~tree_node() = default;
 // ### AVL_TREE ###
 
 template <typename T>
-avl_tree<T>::avl_tree() : root_(nullptr)
+avl_tree<T>::avl_tree() :
+    root_(nullptr)
 {}
 
 template <typename T>
-avl_tree<T>::avl_tree(const avl_tree& that)
+avl_tree<T>::avl_tree(const avl_tree& that) :
+    root_(nullptr)
 {
-    this->root_ = nullptr;
     if (that.root_)
         Copy(&(this->root_), *(that.root_));
+}
+
+template <typename T>
+avl_tree<T>::avl_tree(avl_tree&& that) noexcept :
+    root_(that.root_)
+{
+    that.root_ = nullptr;
 }
 
 template <typename T>
@@ -459,6 +480,14 @@ avl_tree<T>& avl_tree<T>::operator =(const avl_tree& that)
     this->Destroy();
     if (that.root_)
         Copy(&(this->root_), *(that.root_));
+    return *this;
+}
+
+template <typename T>
+avl_tree<T>& avl_tree<T>::operator =(avl_tree&& that) noexcept
+{
+    this->root_ = that.root_;
+    that.root_ = nullptr;
     return *this;
 }
 
