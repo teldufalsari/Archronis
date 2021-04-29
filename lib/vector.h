@@ -109,6 +109,7 @@ public:
     size_t capacity() const;
     size_t size() const;
     void reserve(size_t new_capacity);
+    void resize(size_t new_size);
     void shrink();
 };
 
@@ -207,6 +208,17 @@ void vector<T>::reserve(size_t new_capacity)
     delete[] m_data_;
     m_data_ = temp_buf;
     capacity_ = new_capacity;
+}
+
+template <typename T>
+void vector<T>::resize(size_t new_size)
+{
+    if (capacity_ < new_size)
+        reserve(new_size);
+    if (new_size < size_)
+        for (size_t i = new_size; i < size_; i++)
+            m_data_[i].~T();
+    size_ = new_size;
 }
 
 template <typename T>

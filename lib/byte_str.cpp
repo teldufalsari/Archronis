@@ -79,6 +79,13 @@ void byte_str::reserve(std::size_t new_capacity)
     this->data_ = new_data;
 }
 
+void byte_str::resize(std::size_t new_size)
+{
+    if (new_size > this->capacity_)
+        this->resize(new_size);
+    this->size_ = new_size;
+}
+
 void byte_str::append(const byte_str& s)
 {
     std::size_t total_size = this->size_ + s.size_;

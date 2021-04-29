@@ -45,11 +45,8 @@ void compress(const byte_str& input, size_t input_size, tld::vector<pos_t>& resu
  * @brief Pack compressed data densely
  * @param input Input vector of compressed data
  * @param output Pointer to the array of output data.
- * The requred memory will be allocated, caller should free
- * this memory by calling delete[] operator
- * @return Size of the allocated memory where packed data is stored.
  */
-size_t pack(tld::vector<pos_t>& input, unsigned char** output);
+void unpack(std::size_t codon_count, const byte_str& packed, tld::vector<pos_t>& unpacked);
 
 /**
  * @brief Decode data compressed by compress() function
@@ -72,23 +69,23 @@ int decompress(const pos_t* input, size_t input_size, byte_str& result);
  * @return The array of unpacked data. The caller must then free the array
  * by calling delete[] operator.
  */
-pos_t* unpack(size_t codon_count, const unsigned char* packed);
+pos_t* unpack(std::size_t codon_count, const std::byte* packed);
 
-static inline void pack_pair(const pos_t* in_buf, unsigned char* out_buf)
+static inline void pack_pair(const pos_t* in_buf, std::byte* out_buf)
 {
-    auto in_bytes = (const unsigned char*)in_buf;
+    auto in_bytes = (const std::byte*)in_buf;
     out_buf[0] = in_bytes[0];
-    out_buf[1] = (in_bytes[1] << 4u) + (in_bytes[2] >> 4u);
-    out_buf[2] = (in_bytes[2] << 4u) + (in_bytes[3] & 0x0F);
+    out_buf[1] = (in_bytes[1] << 4u) | (in_bytes[2] >> 4u);
+    out_buf[2] = (in_bytes[2] << 4u) | (in_bytes[3] & std::byte(0x0F));
 }
 
-static inline void unpack_pair(const unsigned char* in_buf, pos_t* out_buf)
+static inline void unpack_pair(const std::byte* in_buf, pos_t* out_buf)
 {
-    auto out_bytes = (unsigned char*)out_buf;
+    auto out_bytes = (std::byte*)out_buf;
     out_bytes[0] = in_buf[0];
     out_bytes[1] = in_buf[1] >> 4u;
-    out_bytes[2] = (in_buf[1] << 4u) + (in_buf[2] >> 4u);
-    out_bytes[3] = in_buf[2] & 0x0F;
+    out_bytes[2] = (in_buf[1] << 4u) | (in_buf[2] >> 4u);
+    out_bytes[3] = in_buf[2] & std::byte(0x0F);
 }
 
 /**
@@ -111,7 +108,7 @@ int decompress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs);
  * @param data_buf data buffer
  * @param data_size size of given array in bytes
  */
-unsigned crc32(const unsigned char *data_buf, std::size_t data_size);
+unsigned crc32(const std::byte* data_buf, std::size_t data_size);
 
 /**
  * @brief Generate table for calculating CRC-32 checksum
