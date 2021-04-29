@@ -27,7 +27,7 @@ public:
         T _n_value;
 
         /// Height of the subtree with a root in this node.
-        unsigned char height;
+        int height;
 
         /// Pointer to the left child node.
         tree_node* left;
@@ -73,8 +73,8 @@ private:
     void RotateLeft(tree_node* old_root);
     void RotateRight(tree_node* old_root);
     void Balance(tree_node* p_tree);
-    inline unsigned char Height(tree_node* p_node);
-    char Diff(tree_node* p_node);
+    inline int Height(tree_node* p_node);
+    int Diff(tree_node* p_node);
     void SetHeight(tree_node* p_node);
 
 public:
@@ -311,22 +311,22 @@ void avl_tree<T>::Balance(avl_tree::tree_node* p_tree)
 }
 
 template <typename T>
-unsigned char avl_tree<T>::Height(avl_tree::tree_node* p_node)
+int avl_tree<T>::Height(avl_tree::tree_node* p_node)
 {
     return (p_node ? p_node->height : 0);
 }
 
 template <typename T>
-char avl_tree<T>::Diff(avl_tree::tree_node* p_node)
+int avl_tree<T>::Diff(avl_tree::tree_node* p_node)
 {
-    return (char)(Height(p_node->right) - Height(p_node->left));
+    return Height(p_node->right) - Height(p_node->left);
 }
 
 template <typename T>
 void avl_tree<T>::SetHeight(avl_tree::tree_node* p_node)
 {
-    unsigned char hl = Height(p_node->left);
-    unsigned char hr = Height(p_node->right);
+    int hl = Height(p_node->left);
+    int hr = Height(p_node->right);
     p_node->height = (hl > hr ? hl : hr) + 1;
 }
 

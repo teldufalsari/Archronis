@@ -210,7 +210,6 @@ int decompress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs)
     return OK;
 }
 
-namespace tld {
 static void crc_generate_table(unsigned* table)
 {
     for (unsigned i = 0; i < 256; i++) {
@@ -244,5 +243,3 @@ unsigned crc32(const unsigned char *data_buf, std::size_t data_size)
     }
     return ~crc;
 }
-
-} // namespace tld
