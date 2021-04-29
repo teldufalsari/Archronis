@@ -3,6 +3,7 @@
 #include <string>
 #include "lib/map.h"
 #include "lib/vector.h"
+#include "lib/byte_str.h"
 #include <filesystem>
 #include <iostream>
 #include <fstream>
@@ -38,7 +39,7 @@ typedef unsigned short pos_t;
  * Use function pack() to pack data into array of 12-bit sequences
  * All data that was stored in the output vector is cleared.
  */
-void compress(const char* input, size_t input_size, tld::vector<pos_t>& result);
+void compress(const byte_str& input, size_t input_size, tld::vector<pos_t>& result);
 
 /**
  * @brief Pack compressed data densely

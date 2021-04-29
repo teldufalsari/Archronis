@@ -55,24 +55,24 @@ pos_t* unpack(size_t codon_count, const unsigned char* packed)
     return output;
 }
 
-void compress(const char* input, size_t input_size, tld::vector<pos_t>& result)
+void compress(const byte_str& input, size_t input_size, tld::vector<pos_t>& result)
 {
     size_t dict_size = 256;
-    tld::map_t<std::string, pos_t> dict;
+    tld::map_t<byte_str, pos_t> dict;
     for (pos_t i = 0; i < dict_size; i++)
-        dict[std::string(1, i)] = i;
-    std::string buffer, bc;
+        dict[byte_str(1, std::byte(i))] = i;
+    byte_str buffer, bc;
     result.clear();
     for (size_t i = 0; i < input_size; i++) {
-        char c = input[i];
+        std::byte c = input[i];
         bc = buffer + c;
-        if ((dict[bc] != 0) || (bc == std::string(1, 0))) {
+        if ((dict[bc] != 0) || (bc == byte_str(1, std::byte(0)))) {
             buffer = bc;
         } else {
             result.push_back(dict[buffer]);
             if (dict_size < TABLE_SIZE)
                 dict[bc] = dict_size++;
-            buffer = std::string(1, c);
+            buffer = byte_str(1, c);
         }
     }
     if (!buffer.empty())
@@ -118,16 +118,17 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
     std::uintmax_t remainder_size = file_size % BLOCK_SIZE;
     std::uintmax_t total_blocks_count = whole_blocks_count + !!(remainder_size);
     outfupt_fs.write((char*)&total_blocks_count, sizeof(total_blocks_count));
-    char* data_buf = new char[BLOCK_SIZE];
-    if (data_buf == nullptr)
-        return ERR_ALLOC;
+    //char* data_buf = new char[BLOCK_SIZE];
+    byte_str data_buf(BLOCK_SIZE, std::byte(0));
+    //if (data_buf == nullptr)
+    //    return ERR_ALLOC;
     tld::vector<pos_t> compressed_buf;
     compressed_buf.reserve(BLOCK_SIZE / 2);
     uintmax_t packed_buf_size = BLOCK_SIZE / 2;
     auto packed_buf = new unsigned char[packed_buf_size];
     for (std::uintmax_t i = 0; i < whole_blocks_count; i++) {
         // Wraparound function here
-        input_fs.read(data_buf, BLOCK_SIZE);
+        input_fs.read((char*)data_buf.data(), BLOCK_SIZE);
         compress(data_buf, BLOCK_SIZE, compressed_buf);
         std::uintmax_t codon_count = compressed_buf.size();
         if (compressed_buf.size() % 2 != 0)
@@ -148,7 +149,7 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
     }
     if (remainder_size != 0) {
         // And here
-        input_fs.read(data_buf, remainder_size);
+        input_fs.read((char*)data_buf.data(), remainder_size);
         compress(data_buf, remainder_size, compressed_buf);
         std::uintmax_t codon_count = compressed_buf.size();
         if (compressed_buf.size() % 2 != 0)
@@ -168,7 +169,7 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
         outfupt_fs.write((char*)&checksum, sizeof(checksum));
     }
     delete[] packed_buf;
-    delete[] data_buf;
+    //delete[] data_buf;
     return OK;
 }
 

@@ -7,11 +7,14 @@ CFLAGS += -std=c++17 -g
 
 all: rat
 
+byte_str.o: lib/byte_str.cpp lib/byte_str.h
+	$(CC) $(CFLAGS) -c lib/byte_str.cpp
+
 lzw.o: lzw.cpp lzw.hpp
 	$(CC) $(CFLAGS) -c lzw.cpp
 
-rat: rat.o lzw.o
-	$(CC) rat.o lzw.o -o rat.exe
+rat: rat.o lzw.o byte_str.o
+	$(CC) rat.o lzw.o byte_str.o -o rat.exe
 
 rat.o: rat.cpp
 	$(CC) $(CFLAGS) -c rat.cpp
