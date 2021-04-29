@@ -4,9 +4,10 @@
 #include <cstddef>
 #include <cstring>
 
+static const std::size_t DEFAULT_CAPACITY = 16U;
+
 class byte_str
 {
-    const std::size_t DEFAULT_CAPACITY = 16U;
     std::byte* data_;
     std::size_t size_;
     std::size_t capacity_;

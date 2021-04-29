@@ -122,7 +122,7 @@ vector<T>::vector() :
 template <typename T>
 vector<T>::vector(size_t capacity) :
     m_data_(new T[capacity]),
-    size_(capacity),
+    size_(0),
     capacity_(capacity)
 {}
 

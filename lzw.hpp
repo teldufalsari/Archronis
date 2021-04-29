@@ -61,7 +61,7 @@ size_t pack(tld::vector<pos_t>& input, unsigned char** output);
  * If compressed data is invalid, ERR_DECODE id returned
  * When the function fails to allocate memory, ERR_ALLOC is returned.
  */
-int decompress(const pos_t* input, size_t input_size, std::string& result);
+int decompress(const pos_t* input, size_t input_size, byte_str& result);
 
 /**
  * @brief Unpack data from 12-bit sequences to 16-bit

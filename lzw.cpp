@@ -1,49 +1,32 @@
 #include "lzw.hpp"
 
-int decompress(const pos_t* input, size_t input_size, std::string& result)
+int decompress(const pos_t* input, size_t input_size, byte_str& result)
 {
     size_t dict_size = 256;
-    std::string** dict =  (std::string**)calloc(TABLE_SIZE, sizeof(std::string*));
-    if (dict == nullptr)
-        return ERR_ALLOC;
-    try {
-        for (pos_t i = 0; i < dict_size; i++)
-            dict[i] = new std::string(1, i);
-    } catch(std::bad_alloc&) {
-        for (pos_t i = 0; i < dict_size; i++)
-            delete dict[i];
-        return ERR_ALLOC;
-    }
-    std::string w(1, input[0]);
+    tld::vector<byte_str> dict(TABLE_SIZE);
+    for (pos_t i = 0; i < dict_size; i++)
+        dict.push_back(byte_str(1, std::byte(i)));
+    byte_str w(1, std::byte(input[0]));
     result = w;
-    std::string buffer;
+    byte_str buffer;
     for (size_t i = 1; i < input_size; i++) {
         pos_t code = input[i];
-        if (dict[code] != nullptr) {
-            buffer = *dict[code];
+        if (code < dict_size) {
+            buffer = dict[code];
         } else if (code == dict_size) {
             buffer = w + w[0];
         } else {
-            for (size_t j = 0; j < dict_size; j++)
-                delete dict[j];
-            free(dict);
             return ERR_DECODE;
         }
-        result += buffer;
-        try {
-            if (dict_size < TABLE_SIZE) {
-                dict[dict_size++] = new std::string(w + buffer[0]);
-            }
-        } catch(std::bad_alloc&) {
-            for (pos_t j = 0; j < dict_size; j++)
-                delete dict[j];
-            return ERR_ALLOC;
+        result.append(buffer);
+        if (dict_size < TABLE_SIZE) {
+            byte_str tmp = w + buffer[0];
+            dict.push_back(tmp);
+            dict_size++;
+            //dict[dict_size++] = new std::string(w + buffer[0]);
         }
         w = buffer;
     }
-    for (size_t j = 0; j < dict_size; j++)
-        delete dict[j];
-    free(dict);
     return OK;
 }
 
@@ -198,14 +181,14 @@ int decompress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs)
             return ERR_CRC;
         }
         pos_t* compressed_buf = unpack(codon_count, packed_buf);
-        std::string decompressed_data;
+        byte_str decompressed_data(BLOCK_SIZE);
         int state = decompress(compressed_buf, codon_count, decompressed_data);
         delete[] compressed_buf;
         if (state != OK) {
             delete[] packed_buf;
             return state;
         }
-        outfupt_fs.write(decompressed_data.c_str(), decompressed_data.size());
+        outfupt_fs.write((char*)decompressed_data.data(), decompressed_data.size());
     }
     delete[] packed_buf;
     return OK;
