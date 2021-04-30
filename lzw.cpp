@@ -23,7 +23,6 @@ int decompress(const pos_t* input, size_t input_size, byte_str& result)
             byte_str tmp = w + buffer[0];
             dict.push_back(tmp);
             dict_size++;
-            //dict[dict_size++] = new std::string(w + buffer[0]);
         }
         w = buffer;
     }
@@ -94,10 +93,7 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
     std::uintmax_t remainder_size = file_size % BLOCK_SIZE;
     std::uintmax_t total_blocks_count = whole_blocks_count + !!(remainder_size);
     outfupt_fs.write((char*)&total_blocks_count, sizeof(total_blocks_count));
-    //char* data_buf = new char[BLOCK_SIZE];
     byte_str data_buf(BLOCK_SIZE, std::byte(0));
-    //if (data_buf == nullptr)
-    //    return ERR_ALLOC;
     tld::vector<pos_t> compressed_buf;
     compressed_buf.reserve(BLOCK_SIZE / 2);
     byte_str packed_buf(BLOCK_SIZE);
@@ -133,8 +129,6 @@ int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintma
         outfupt_fs.write((char*)packed_buf.data(), packed_size);
         outfupt_fs.write((char*)&checksum, sizeof(checksum));
     }
-    //delete[] packed_buf;
-    //delete[] data_buf;
     return OK;
 }
 

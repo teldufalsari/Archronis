@@ -82,7 +82,7 @@ void byte_str::reserve(std::size_t new_capacity)
 void byte_str::resize(std::size_t new_size)
 {
     if (new_size > this->capacity_)
-        this->resize(new_size);
+        this->reserve(new_size);
     this->size_ = new_size;
 }
 
