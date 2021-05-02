@@ -13,11 +13,14 @@ byte_str.o: lib/byte_str.cpp lib/byte_str.h
 lzw.o: lzw.cpp lzw.hpp
 	$(CC) $(CFLAGS) -c lzw.cpp
 
-rat: rat.o lzw.o byte_str.o
-	$(CC) rat.o lzw.o byte_str.o -o rat.exe
+rat: rat.o lzw.o byte_str.o compressor.o
+	$(CC) rat.o lzw.o byte_str.o  compressor.o -o rat.exe
 
 rat.o: rat.cpp
 	$(CC) $(CFLAGS) -c rat.cpp
+
+compressor.o: compressor.cpp compressor.hpp
+	$(CC) $(CFLAGS) -c compressor.cpp
 
 clean:
 	rm -rf *.o *.exe

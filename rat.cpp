@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <string>
 #include "lzw.hpp"
+#include "compressor.hpp"
 namespace fs = std::filesystem;
 
 const char COMPRESSED_SIGNATURE[8] = "rat03cp";
@@ -82,7 +83,8 @@ int compress_file(const std::string& name, const rat_metadata& metadata, std::of
     }
     output_fs.write((const char*)&metadata, sizeof(metadata));
     output_fs.write(name.c_str(), name.size());
-    return compress_all(input_fs, output_fs, metadata.size);
+    compressor compr;
+    return compr.compressFile(input_fs, output_fs, metadata.size);
 }
 
 int gather_metadata(tld::vector<rat_metadata>& meta, const tld::vector<std::string> names)
@@ -166,7 +168,8 @@ int rat_unpack(const char* name)
             std::cout << "Could not create file '" << cur_name << '\'' << std::endl;
             return ERR_OPEN;
         }
-        int state = decompress_all(input_fs, output_fs);
+        compressor compr;
+        int state = compr.decompressFile(input_fs, output_fs);
         if (state != OK) {
             rat_perror(cur_name, state);
             return state;

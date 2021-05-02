@@ -46,7 +46,7 @@ void compress(const byte_str& input, size_t input_size, tld::vector<pos_t>& resu
  * @param input Input vector of compressed data
  * @param output Pointer to the array of output data.
  */
-void unpack(std::size_t codon_count, const byte_str& packed, tld::vector<pos_t>& unpacked);
+size_t pack(tld::vector<pos_t>& input, byte_str& output);
 
 /**
  * @brief Decode data compressed by compress() function
@@ -60,16 +60,7 @@ void unpack(std::size_t codon_count, const byte_str& packed, tld::vector<pos_t>&
  */
 int decompress(const pos_t* input, size_t input_size, byte_str& result);
 
-/**
- * @brief Unpack data from 12-bit sequences to 16-bit
- * @param packed The array of packed data
- * @param codon_count Number of significant 12-bit words in the array.
- * Number of elements in packed arra must be an even number, even if
- * codon_count is odd.
- * @return The array of unpacked data. The caller must then free the array
- * by calling delete[] operator.
- */
-pos_t* unpack(std::size_t codon_count, const std::byte* packed);
+void unpack(std::size_t codon_count, const byte_str& packed, tld::vector<pos_t>& unpacked);
 
 static inline void pack_pair(const pos_t* in_buf, std::byte* out_buf)
 {
@@ -87,21 +78,6 @@ static inline void unpack_pair(const std::byte* in_buf, pos_t* out_buf)
     out_bytes[2] = (in_buf[1] << 4u) | (in_buf[2] >> 4u);
     out_bytes[3] = in_buf[2] & std::byte(0x0F);
 }
-
-/**
- * @brief Compress file_size bytes from input_fs and write compressed and packed data
- * into output_fs.
- * Number of 12-bit code words is written in first 8 bytes before the data.
- */
-int compress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs, std::uintmax_t file_size);
-
-/**
- * @brief Read packed and compressed data from input_fs and write
- * decompressed data intp output_fs.
- * The first 8 bytes of input_fs must be the number of 12-bit code words in
- * packed file.
- */
-int decompress_all(std::ifstream& input_fs, std::ofstream& outfupt_fs);
 
 /**
  * @brief Calculate a bytewise CRC-32 checksum of given array
