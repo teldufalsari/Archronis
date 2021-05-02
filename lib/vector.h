@@ -104,12 +104,35 @@ public:
      * @param elem new value
      */
     void push_back(const T& elem);
+
+    /**
+     * @brief Remove the last element from vector (caling its destructor)
+     */
     void pop_back();
+
+    /// @brief Tell whether this vector is empty or not
     bool empty() const;
+
+    /// @brief Get capacity (max number of elements that can be stored without additional allocation)
     size_t capacity() const;
+
+    /// @brief Get count of elements in the vector
     size_t size() const;
+
+    /**
+     * @brief Allocate additional memory. If capacity is already big enough, vector shall not shrink
+     * @param new_capacity
+     */
     void reserve(size_t new_capacity);
+
+    /**
+     * @brief Change size of the vector. Elements that do not fit into new size will be destructed,
+     * but capacity will not be reduced.
+     * @param new_size
+     */
     void resize(size_t new_size);
+
+    /// Make capacity equal to the size of the vector
     void shrink();
 };
 

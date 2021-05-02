@@ -2,27 +2,25 @@
 
 int decompress(const pos_t* input, size_t input_size, byte_str& result)
 {
-    size_t dict_size = 256;
     tld::vector<byte_str> dict(TABLE_SIZE);
-    for (pos_t i = 0; i < dict_size; i++)
+    for (pos_t i = 0; i < 256; i++)
         dict.push_back(byte_str(1, std::byte(i)));
     byte_str w(1, std::byte(input[0]));
     result = w;
     byte_str buffer;
     for (size_t i = 1; i < input_size; i++) {
         pos_t code = input[i];
-        if (code < dict_size) {
+        if (code < dict.size()) {
             buffer = dict[code];
-        } else if (code == dict_size) {
+        } else if (code == dict.size()) {
             buffer = w + w[0];
         } else {
             return ERR_DECODE;
         }
         result.append(buffer);
-        if (dict_size < TABLE_SIZE) {
+        if (dict.size() < TABLE_SIZE) {
             byte_str tmp = w + buffer[0];
             dict.push_back(tmp);
-            dict_size++;
         }
         w = buffer;
     }

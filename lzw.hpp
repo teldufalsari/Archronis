@@ -60,6 +60,12 @@ size_t pack(tld::vector<pos_t>& input, byte_str& output);
  */
 int decompress(const pos_t* input, size_t input_size, byte_str& result);
 
+/**
+ * @brief Unpack densely packed data
+ * @param codon_count number of 12-bit code words in the input sequence
+ * @param packed byte string with packed data
+ * @param unpacked container where unpacked data are placed
+ */
 void unpack(std::size_t codon_count, const byte_str& packed, tld::vector<pos_t>& unpacked);
 
 static inline void pack_pair(const pos_t* in_buf, std::byte* out_buf)
