@@ -153,6 +153,13 @@ public:
     bool Empty();
 
     /**
+     * @brief Searches the map for elements with a specified key and returns the number of matches
+     * @param key key to search for
+     * @return For a map the value either 0 or 1
+     */
+    unsigned Count(const KeyT& key);
+
+    /**
      * @brief An access operator. Retrieves a value by a key.
      * @param key
      * @return Reference to the value component of the pair with provided key.
@@ -326,6 +333,15 @@ template <typename KeyT, typename ValT>
 bool map_t<KeyT, ValT>::Empty()
 {
     return (m_tree_.root_ == nullptr);
+}
+
+template <typename KeyT, typename ValT>
+unsigned map_t<KeyT, ValT>::Count(const KeyT& key)
+{
+    if (Find(key, m_tree_.root_) != nullptr)
+        return 1;
+    else
+        return 0;
 }
 
 template <typename KeyT, typename ValT>

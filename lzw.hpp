@@ -25,7 +25,7 @@ enum errors {
     ERR_CRC
 };
 
-const std::string EMPTY_STR = std::string();
+const byte_str EMPTY_STR = byte_str(1, std::byte(0));
 const size_t TABLE_SIZE = 4096;
 const size_t BLOCK_SIZE = 4096 * 4;
 typedef unsigned short pos_t;

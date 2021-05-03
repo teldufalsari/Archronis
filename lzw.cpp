@@ -45,7 +45,7 @@ void compress(const byte_str& input, size_t input_size, tld::vector<pos_t>& resu
     for (size_t i = 0; i < input_size; i++) {
         std::byte c = input[i];
         bc = buffer + c;
-        if ((dict[bc] != 0) || (bc == byte_str(1, std::byte(0)))) {
+        if (dict.Count(bc) != 0) {
             buffer = bc;
         } else {
             result.push_back(dict[buffer]);

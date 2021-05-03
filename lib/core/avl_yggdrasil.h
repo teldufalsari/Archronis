@@ -50,6 +50,12 @@ public:
         tree_node(const tree_node& that);
 
         /**
+         * @brief Move constructor.
+         * @param that Reference to the source object.
+         */
+        tree_node(tree_node&& that) noexcept;
+
+        /**
          * @brief Trivial destructor.
          */
         ~tree_node();
@@ -154,18 +160,31 @@ inline bool operator ==(const avl_tree<T>& lht, const avl_tree<T>& rht);
 // ### TREE_NODE ###
 
 template <typename T>
-avl_tree<T>::tree_node::tree_node(): _n_value(), height(1), left(nullptr), parent(nullptr), right(nullptr)
+avl_tree<T>::tree_node::tree_node() :
+    _n_value(),
+    height(1),
+    left(nullptr),
+    parent(nullptr),
+    right(nullptr)
 {}
 
 template <typename T>
-avl_tree<T>::tree_node::tree_node(const avl_tree::tree_node& that)
-{
-    this->_n_value = that._n_value;
-    this->height = that.height;
-    this->left = nullptr;
-    this->parent = nullptr;
-    this->right = nullptr;
-}
+avl_tree<T>::tree_node::tree_node(const avl_tree::tree_node& that) :
+    _n_value(that._n_value),
+    height(that.height),
+    left(nullptr),
+    parent(nullptr),
+    right(nullptr)
+{}
+
+template <typename T>
+avl_tree<T>::tree_node::tree_node(tree_node&& that) noexcept :
+    _n_value(std::move(that._n_value)),
+    height(that.height),
+    left(nullptr),
+    parent(nullptr),
+    right(nullptr)
+{}
 
 template <typename T>
 avl_tree<T>::tree_node::~tree_node() = default;
