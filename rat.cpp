@@ -7,7 +7,6 @@
 namespace fs = std::filesystem;
 
 const char COMPRESSED_SIGNATURE[8] = "rat03cp";
-const char ARCHIVED_SIGNATURE[8] = "rat03ar";
 
 struct rat_metadata {
     fs::file_status status;
@@ -20,7 +19,7 @@ int rat_pack(int count, char* names[]);
 int rat_unpack(const char* name);
 int gather_metadata(tld::vector<rat_metadata>& meta, const tld::vector<std::string> names);
 int compress_file(const std::string& name, const rat_metadata& metadata, std::ofstream& output_fs);
-void rat_perror(const std::string& file_name, int err_code);
+std::string rat_strerror(const std::string& file_name, int err_code);
 
 int main(int argc, char* argv[])
 {
@@ -136,6 +135,7 @@ int rat_unpack(const char* name)
     int file_count = 0;
     input_fs.read((char*)&file_count, sizeof(file_count));
     rat_metadata cur_metadata = {};
+    compressor compr;
     for (int i = 0; i < file_count; i++) {
         input_fs.read((char*)&cur_metadata, sizeof(cur_metadata));
         if (!input_fs.good()) {
@@ -168,10 +168,9 @@ int rat_unpack(const char* name)
             std::cout << "Could not create file '" << cur_name << '\'' << std::endl;
             return ERR_OPEN;
         }
-        compressor compr;
         int state = compr.decompressFile(input_fs, output_fs);
         if (state != OK) {
-            rat_perror(cur_name, state);
+            std::cout << rat_strerror(cur_name, state) << std::endl;
             return state;
         }
         output_fs.close();
@@ -187,38 +186,28 @@ int rat_unpack(const char* name)
     return OK;
 }
 
-void rat_perror(const std::string& file_name, int err_code)
+std::string rat_strerror(const std::string& file_name, int err_code)
 {
     switch (err_code) {
     case ERR_NO_COMMAND:
-        std::cout << "File '" << file_name << "' does not exist" << std::endl;
-        break;
+        return "File '" +  file_name + "' does not exist";
     case ERR_OPEN:
-        std::cout << "Could not open file '" << file_name << '\'' << std::endl;
-        break;
+        return "Could not open file '" + file_name + '\'';
     case ERR_NOT_REG:
-        std::cout << "File '" << file_name << "' is not regular" << std::endl;
-        break;
+        return "File '" + file_name + "' is not regular";
     case ERR_ALLOC:
-        std::cout << "Could not allocate memory to handle file '" << file_name << '\'' << std::endl;
-        break;
+        return "Could not allocate memory to handle file '" + file_name + '\'';
     case ERR_READ:
-        std::cout << "Could not read data from file '" << file_name << '\'' << std::endl;
-        break;
+        return "Could not read data from file '" + file_name + '\'';
     case ERR_WRITE:
-        std::cout << "Could not write data to file '" << file_name << '\'' << std::endl;
-        break;
+        return "Could not write data to file '" + file_name + '\'';
     case ERR_DECODE:
-        std::cout << "Could not decode file '" << file_name << "', it appears to be corrupted" << std::endl;
-        break;
+        return "Could not decode file '" + file_name + "', it appears to be corrupted";
     case ERR_NOT_ARCH:
-        std::cout << "File '" << file_name << "' is not signed as an archive, I won't touch it" << std::endl;
-        break;
+        return "File '" + file_name + "' is not signed as an archive, I won't touch it";
     case ERR_CRC:
-        std::cout << "Checksum error: file '" << file_name << "' in the arcive appears to be corrupted" << std::endl;
-        break;
+        return "Checksum error: file '" + file_name + "' in the arcive appears to be corrupted";
     default:
-        std::cout << "Unknown error occured while processing file '" << file_name << '\'' << std::endl;
-        break;
+        return "Unknown error occured while processing file '" + file_name + '\'';
     }
 }
