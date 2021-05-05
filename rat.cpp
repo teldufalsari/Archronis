@@ -8,18 +8,19 @@ namespace fs = std::filesystem;
 
 const char COMPRESSED_SIGNATURE[8] = "rat03cp";
 
-struct rat_metadata {
+struct arc_metadata {
     fs::file_status status;
     std::uintmax_t size;
     fs::file_time_type last_mod_time;
     std::size_t name_size;
 };
 
-int rat_pack(int count, char* names[]);
-int rat_unpack(const char* name);
-int gather_metadata(tld::vector<rat_metadata>& meta, const tld::vector<std::string> names);
-int compress_file(const std::string& name, const rat_metadata& metadata, std::ofstream& output_fs);
-std::string rat_strerror(const std::string& file_name, int err_code);
+int PackMode(int count, char* names[]);
+int UnpackMode(const char* name);
+int GatherMetadata(tld::vector<arc_metadata>& meta, const tld::vector<std::string> names);
+int CompressFile(const std::string& name, const arc_metadata& metadata, std::ofstream& output_fs);
+int DecompressFile(std::ifstream& input_fs, compressor& compr);
+std::string ArcStrerror(const std::string& file_name, int err_code);
 
 int main(int argc, char* argv[])
 {
@@ -35,24 +36,23 @@ int main(int argc, char* argv[])
             std::cout << "Output archive name not specified" << std::endl;
             return ERR_NO_FILE;
         }
-        return rat_pack(argc - 2, argv + 2);
+        return PackMode(argc - 2, argv + 2);
     }
     if (std::string(argv[1]) == "unpack")
-        return rat_unpack(argv[2]);
+        return UnpackMode(argv[2]);
     std::cout << "Unknown command '" << argv[1] << '\'' << std::endl;
     return ERR_NO_COMMAND;
 }
 
-int rat_pack(int count, char* names[])
+int PackMode(int count, char* names[])
 {
     int input_count = count - 1;
     tld::vector<std::string> input_names;
     for (int i = 0; i < input_count; i++)
         input_names.push_back(names[i]);
     std::string arch_name(names[input_count]);
-    tld::vector<rat_metadata> metadata_v;
-    // add try/catch block here
-    int state = gather_metadata(metadata_v, input_names);
+    tld::vector<arc_metadata> metadata_v;
+    int state = GatherMetadata(metadata_v, input_names);
     if (state != OK) {
         std::cout << "Could not create an archive due to previous errors" << std::endl;
         return state;
@@ -65,16 +65,16 @@ int rat_pack(int count, char* names[])
     output_fs.write(COMPRESSED_SIGNATURE, sizeof(COMPRESSED_SIGNATURE));
     output_fs.write((char*)&input_count, sizeof(input_count));
     for (std::size_t i = 0; i < input_names.size(); i++) {
-        state = compress_file(input_names[i], metadata_v[i], output_fs);
+        state = CompressFile(input_names[i], metadata_v[i], output_fs);
         if (state != OK) {
-            std::cout << "Could not compress file '" << input_names[i] << '\'' << std::endl;
+            std::cout << ArcStrerror(input_names[i], state) << std::endl;
             return state;
         }
     }
     return OK;
 }
 
-int compress_file(const std::string& name, const rat_metadata& metadata, std::ofstream& output_fs)
+int CompressFile(const std::string& name, const arc_metadata& metadata, std::ofstream& output_fs)
 {
     std::ifstream input_fs(name);
     if (!input_fs.is_open()) {
@@ -83,13 +83,16 @@ int compress_file(const std::string& name, const rat_metadata& metadata, std::of
     output_fs.write((const char*)&metadata, sizeof(metadata));
     output_fs.write(name.c_str(), name.size());
     compressor compr;
-    return compr.compressFile(input_fs, output_fs, metadata.size);
+    int state = compr.compressFile(input_fs, output_fs, metadata.size);
+    if (state == OK && (!input_fs.good() || !output_fs.good()))
+        state = ERR_FSTREAM;
+    return state;
 }
 
-int gather_metadata(tld::vector<rat_metadata>& meta, const tld::vector<std::string> names)
+int GatherMetadata(tld::vector<arc_metadata>& meta, const tld::vector<std::string> names)
 {
     int ret = OK;
-    rat_metadata buffer = {};
+    arc_metadata buffer = {};
     for (std::size_t i = 0; i < names.size(); i++) {
         if (!fs::exists(names[i])) {
             std::cout << "File '" << names[i] << "' does not exist" << std::endl;
@@ -102,91 +105,100 @@ int gather_metadata(tld::vector<rat_metadata>& meta, const tld::vector<std::stri
             ret = ERR_NOT_REG;
             continue;
         }
-        buffer.size = fs::file_size(names[i]);
-        buffer.last_mod_time = fs::last_write_time(names[i]);
+        try {
+            buffer.size = fs::file_size(names[i]);
+            buffer.last_mod_time = fs::last_write_time(names[i]);
+        } catch (std::exception& ex) {
+            std::cout << "Could not collect file metadata for file '" << names[i] << ":\n";
+            std::cout << ex.what() << std::endl;
+            ret = ERR_FS_ERROR;
+        }
         buffer.name_size = names[i].size();
         meta.push_back(buffer);
     }
     return ret;
 }
 
-int rat_unpack(const char* name)
+int TryOpenArchive(const std::string& file_name, std::ifstream& file_stream)
 {
-    std::string arch_name(name);
-    if (!fs::exists(arch_name)) {
-        std::cout << "File '" << arch_name << "' does not exist" << std::endl;
+    if (!fs::exists(file_name)) {
+        std::cout << "File '" << file_name << "' does not exist" << std::endl;
         return ERR_NO_FILE;
     }
-    if (!fs::is_regular_file(arch_name)) {
-        std::cout << "File '" << arch_name << "' can't be an archive file: not a regular file" << std::endl;
+    if (!fs::is_regular_file(file_name)) {
+        std::cout << "File '" << file_name << "' can't be an archive file: not a regular file" << std::endl;
         return ERR_NOT_REG;
     }
-    std::ifstream input_fs(arch_name);
-    if (!input_fs.is_open()) {
-        std::cout << "Could not open file '" << arch_name << "' for extracting" << std::endl;
+    file_stream.open(file_name);
+    if (!file_stream.is_open()) {
+        std::cout << "Could not open file '" << file_name << "' for extracting" << std::endl;
         return ERR_OPEN;
-    }
-    std::uintmax_t signature = 0;
-    input_fs.read((char*)&signature, sizeof(signature));
-    if (signature != *((const std::uintmax_t*)&COMPRESSED_SIGNATURE)) {
-        std::cout << "File '" << arch_name << "' is not a valid archive file" << std::endl;
-        return ERR_NOT_ARCH;
-    }
-    int file_count = 0;
-    input_fs.read((char*)&file_count, sizeof(file_count));
-    rat_metadata cur_metadata = {};
-    compressor compr;
-    for (int i = 0; i < file_count; i++) {
-        input_fs.read((char*)&cur_metadata, sizeof(cur_metadata));
-        if (!input_fs.good()) {
-            std::cout << "Could not read more data" << std::endl;
-            return ERR_READ;
-        }
-        auto cur_name_buf = (char*)calloc(cur_metadata.name_size + 1, sizeof(char));
-        input_fs.read(cur_name_buf, cur_metadata.name_size);
-        /*
-         * Good idea to make function "int check(const std::fstream &fs)"
-         * Call: int state = (check(input_fs);
-         *       if (state) return state;
-         * Check function does all printing to std output
-         */
-        if (!input_fs.good()) {
-            std::cout << "Could not read more data: ";
-            if (input_fs.bad())
-                std::cout << "badbit set" << std::endl;
-            else if (input_fs.eof())
-                std::cout << "reached end" << std::endl;
-            else
-                std::cout << "failbit set" << std::endl;
-            return ERR_READ;
-        }
-        cur_name_buf[cur_metadata.name_size] = '\0';
-        std::string cur_name(cur_name_buf);
-        free(cur_name_buf);
-        std::ofstream output_fs(cur_name);
-        if (!output_fs.is_open()) {
-            std::cout << "Could not create file '" << cur_name << '\'' << std::endl;
-            return ERR_OPEN;
-        }
-        int state = compr.decompressFile(input_fs, output_fs);
-        if (state != OK) {
-            std::cout << rat_strerror(cur_name, state) << std::endl;
-            return state;
-        }
-        output_fs.close();
-        // set metadata
-        std::error_code errc;
-        fs::permissions(cur_name, cur_metadata.status.permissions(), errc);
-        if (errc.value())
-            std::cout << "Failed to modify access permissions for file '" << cur_name << '\'' << std::endl;
-        fs::last_write_time(cur_name, cur_metadata.last_mod_time, errc);
-        if (errc.value())
-            std::cout << "Failed to modify last modification time for file '" << cur_name << '\'' << std::endl;
     }
     return OK;
 }
 
-std::string rat_strerror(const std::string& file_name, int err_code)
+int UnpackMode(const char* name)
+{
+    std::string arch_name(name);
+    std::ifstream input_fs;
+    int state = TryOpenArchive(arch_name, input_fs);
+    if (state != OK) {
+        std::cout << ArcStrerror(arch_name, state) << std::endl;
+        return state;
+    }
+    std::uintmax_t signature = 0;
+    input_fs.read((char*)&signature, sizeof(signature));
+    if (signature != *((const std::uintmax_t*)&COMPRESSED_SIGNATURE)) {
+        std::cout << ArcStrerror(arch_name, ERR_NOT_ARCH) << std::endl;
+        return ERR_NOT_ARCH;
+    }
+    int file_count = 0;
+    input_fs.read((char*)&file_count, sizeof(file_count));
+    compressor compr;
+    for (int i = 0; i < file_count; i++) {
+        int state = DecompressFile(input_fs, compr);
+        if (state != OK) {
+            std::cout << ArcStrerror(arch_name, state) << std::endl;
+            return state;
+        }
+    }
+    return OK;
+}
+
+int DecompressFile(std::ifstream& input_fs, compressor& compr)
+{
+    arc_metadata cur_metadata = {};
+    input_fs.read((char*)&cur_metadata, sizeof(cur_metadata));
+    if (!input_fs.good())
+        return ERR_FSTREAM;
+    auto cur_name_buf = new char[cur_metadata.name_size + 1];
+    input_fs.read(cur_name_buf, cur_metadata.name_size);
+    if (!input_fs.good()) {
+        delete[] cur_name_buf;
+        return ERR_FSTREAM;
+    }
+    cur_name_buf[cur_metadata.name_size] = '\0';
+    std::string cur_name(cur_name_buf);
+    delete[] cur_name_buf;
+    std::ofstream output_fs(cur_name);
+    if (!output_fs.is_open())
+        return ERR_CREATE;
+    int state = compr.decompressFile(input_fs, output_fs);
+    if (state == OK && (!input_fs.good() || !output_fs.good()))
+        state = ERR_FSTREAM;
+    if (state != OK)
+        return state;
+    try {
+        fs::permissions(cur_name, cur_metadata.status.permissions());
+        fs::last_write_time(cur_name, cur_metadata.last_mod_time);
+    } catch (std::exception& ex) {
+        std::cout << "Failed to set proper metadata for file" << cur_name << "\n";
+        std::cout << ex.what() << std::endl;
+    }
+    return state;
+}
+
+std::string ArcStrerror(const std::string& file_name, int err_code)
 {
     switch (err_code) {
     case ERR_NO_COMMAND:
@@ -199,14 +211,16 @@ std::string rat_strerror(const std::string& file_name, int err_code)
         return "Could not allocate memory to handle file '" + file_name + '\'';
     case ERR_READ:
         return "Could not read data from file '" + file_name + '\'';
-    case ERR_WRITE:
-        return "Could not write data to file '" + file_name + '\'';
+    case ERR_FSTREAM:
+        return "Could not process file '" + file_name + "' due to file i/o error";
     case ERR_DECODE:
         return "Could not decode file '" + file_name + "', it appears to be corrupted";
     case ERR_NOT_ARCH:
         return "File '" + file_name + "' is not signed as an archive, I won't touch it";
     case ERR_CRC:
         return "Checksum error: file '" + file_name + "' in the arcive appears to be corrupted";
+    case ERR_CREATE:
+        return "Could not create file to extract data from '" + file_name + '\'';
     default:
         return "Unknown error occured while processing file '" + file_name + '\'';
     }
