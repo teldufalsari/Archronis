@@ -37,7 +37,7 @@ void unpack(std::size_t codon_count, const byte_str& packed, tld::vector<pos_t>&
 void compress(const byte_str& input, size_t input_size, tld::vector<pos_t>& result)
 {
     size_t dict_size = 256;
-    tld::map_t<byte_str, pos_t> dict;
+    tld::map<byte_str, pos_t> dict;
     for (pos_t i = 0; i < dict_size; i++)
         dict[byte_str(1, std::byte(i))] = i;
     byte_str buffer, bc;
@@ -45,7 +45,7 @@ void compress(const byte_str& input, size_t input_size, tld::vector<pos_t>& resu
     for (size_t i = 0; i < input_size; i++) {
         std::byte c = input[i];
         bc = buffer + c;
-        if (dict.Count(bc) != 0) {
+        if (dict.count(bc) != 0) {
             buffer = bc;
         } else {
             result.push_back(dict[buffer]);

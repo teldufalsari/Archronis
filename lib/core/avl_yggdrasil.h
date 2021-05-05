@@ -66,22 +66,22 @@ public:
     tree_node* root_;
 
 private:
-    void InOrderTraverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node);
-    void PreOrderTraverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node);
-    void PostOrderTraverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node);
-    tree_node* Insert(tree_node** node, const T& new_value);
-    void NodeDestroy(tree_node* p_node);
-    tree_node* Find(tree_node* p_node, const T& key);
-    void FindAndRemove(tree_node* p_node, const T& key);
-    void Remove(tree_node* p_node);
-    tree_node* Max(tree_node* p_node);
-    void Copy(tree_node** p_dst, const tree_node& src);
-    void RotateLeft(tree_node* old_root);
-    void RotateRight(tree_node* old_root);
-    void Balance(tree_node* p_tree);
-    inline int Height(tree_node* p_node);
-    int Diff(tree_node* p_node);
-    void SetHeight(tree_node* p_node);
+    void in_order_traverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node);
+    void pre_order_traverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node);
+    void post_order_traverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node);
+    tree_node* insert(tree_node** node, const T& new_value);
+    void node_destroy(tree_node* p_node);
+    tree_node* find(tree_node* p_node, const T& key);
+    void find_and_remove(tree_node* p_node, const T& key);
+    void remove(tree_node* p_node);
+    tree_node* max(tree_node* p_node);
+    void copy(tree_node** p_dst, const tree_node& src);
+    void rotate_left(tree_node* old_root);
+    void rotate_right(tree_node* old_root);
+    void balance(tree_node* p_tree);
+    inline int height(tree_node* p_node);
+    int diff(tree_node* p_node);
+    void set_height(tree_node* p_node);
 
 public:
     /**
@@ -125,25 +125,25 @@ public:
      * @param [in] new_value An element to insert.
      * @return Pointer to the node containing the element inserted.
      */
-    tree_node* Insert(const T& new_value);
+    tree_node* insert(const T& new_value);
 
     /**
      * @brief Clear the tree: recursively frees allocated memory and sets root pointer null.
      */
-    void Destroy();
+    void destroy();
 
     /**
      * @brief Retrieves a value with specified key.
      * @param key Key of the element.
      * @return Pointer to the node containing the element is stored if found, otherwise nullptr.
      */
-    tree_node* Find(const T& key);
+    tree_node* find(const T& key);
 
     /**
      * @brief Removes the element with specified key from the container.
      * @param key Key of the element.
      */
-    void FindAndRemove(const T& key);
+    void find_and_remove(const T& key);
 };
 
 /**
@@ -202,7 +202,7 @@ avl_tree<T>::avl_tree(const avl_tree& that) :
     root_(nullptr)
 {
     if (that.root_)
-        Copy(&(this->root_), *(that.root_));
+        copy(&(this->root_), *(that.root_));
 }
 
 template <typename T>
@@ -216,60 +216,60 @@ template <typename T>
 avl_tree<T>::~avl_tree()
 {
     if (root_)
-        this->Destroy();
+        this->destroy();
 }
 
 template <typename T>
-void avl_tree<T>::InOrderTraverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node)
+void avl_tree<T>::in_order_traverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node)
 {
     if (p_node == nullptr)
         return;
     if (p_node->left != nullptr)
-        InOrderTraverse(p_function, p_node->left);
+        in_order_traverse(p_function, p_node->left);
     (this->*p_function)(p_node);
     if (p_node->right != nullptr)
-        InOrderTraverse(p_function, p_node->right);
+        in_order_traverse(p_function, p_node->right);
 }
 
 template <typename T>
-void avl_tree<T>::PreOrderTraverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node)
+void avl_tree<T>::pre_order_traverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node)
 {
     if (p_node == nullptr)
         return;
     (this->*p_function)(p_node);
     if (p_node->left != nullptr)
-        PreOrderTraverse(p_function, p_node->left);
+        pre_order_traverse(p_function, p_node->left);
     if (p_node->right != nullptr)
-        PreOrderTraverse(p_function, p_node->right);
+        pre_order_traverse(p_function, p_node->right);
 }
 
 template <typename T>
-void avl_tree<T>::PostOrderTraverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node)
+void avl_tree<T>::post_order_traverse(void (avl_tree<T>::*p_function)(tree_node*), tree_node* p_node)
 {
     if (p_node == nullptr)
         return;
     if (p_node->left != nullptr)
-        PostOrderTraverse(p_function, p_node->left);
+        post_order_traverse(p_function, p_node->left);
     if (p_node->right != nullptr)
-        PostOrderTraverse(p_function, p_node->right);
+        post_order_traverse(p_function, p_node->right);
     (this->*p_function)(p_node);
 }
 
 template <typename T>
-void avl_tree<T>::Destroy()
+void avl_tree<T>::destroy()
 {
-    PostOrderTraverse(&avl_tree::NodeDestroy, root_);
+    post_order_traverse(&avl_tree::node_destroy, root_);
     root_ = nullptr;
 }
 
 template <typename T>
-void avl_tree<T>::NodeDestroy(avl_tree::tree_node* p_node)
+void avl_tree<T>::node_destroy(avl_tree::tree_node* p_node)
 {
     delete p_node;
 }
 
 template <typename T>
-void avl_tree<T>::RotateLeft(avl_tree::tree_node* old_root)
+void avl_tree<T>::rotate_left(avl_tree::tree_node* old_root)
 {
     tree_node* new_root = old_root->right;
     old_root->right = new_root->left;
@@ -286,12 +286,12 @@ void avl_tree<T>::RotateLeft(avl_tree::tree_node* old_root)
     new_root->parent = old_root->parent;
     new_root->left = old_root;
     old_root->parent = new_root;
-    SetHeight(old_root);
-    SetHeight(new_root);
+    set_height(old_root);
+    set_height(new_root);
 }
 
 template <typename T>
-void avl_tree<T>::RotateRight(avl_tree::tree_node* old_root)
+void avl_tree<T>::rotate_right(avl_tree::tree_node* old_root)
 {
     tree_node* new_root = old_root->left;
     old_root->left = new_root->right;
@@ -308,49 +308,49 @@ void avl_tree<T>::RotateRight(avl_tree::tree_node* old_root)
     new_root->parent = old_root->parent;
     new_root->right = old_root;
     old_root->parent = new_root;
-    SetHeight(old_root);
-    SetHeight(new_root);
+    set_height(old_root);
+    set_height(new_root);
 }
 
 template <typename T>
-void avl_tree<T>::Balance(avl_tree::tree_node* p_tree)
+void avl_tree<T>::balance(avl_tree::tree_node* p_tree)
 {
-    SetHeight(p_tree);
-    if (Diff(p_tree) == 2) {
-        if (Diff(p_tree->right) < 0)
-            RotateRight(p_tree->right);
-        RotateLeft(p_tree);
+    set_height(p_tree);
+    if (diff(p_tree) == 2) {
+        if (diff(p_tree->right) < 0)
+            rotate_right(p_tree->right);
+        rotate_left(p_tree);
     }
     
-    if (Diff(p_tree) == -2) {
-        if (Diff(p_tree->left) > 0)
-            RotateLeft(p_tree->left);
-        RotateRight(p_tree);
+    if (diff(p_tree) == -2) {
+        if (diff(p_tree->left) > 0)
+            rotate_left(p_tree->left);
+        rotate_right(p_tree);
     }
 }
 
 template <typename T>
-int avl_tree<T>::Height(avl_tree::tree_node* p_node)
+int avl_tree<T>::height(avl_tree::tree_node* p_node)
 {
     return (p_node ? p_node->height : 0);
 }
 
 template <typename T>
-int avl_tree<T>::Diff(avl_tree::tree_node* p_node)
+int avl_tree<T>::diff(avl_tree::tree_node* p_node)
 {
-    return Height(p_node->right) - Height(p_node->left);
+    return height(p_node->right) - height(p_node->left);
 }
 
 template <typename T>
-void avl_tree<T>::SetHeight(avl_tree::tree_node* p_node)
+void avl_tree<T>::set_height(avl_tree::tree_node* p_node)
 {
-    int hl = Height(p_node->left);
-    int hr = Height(p_node->right);
+    int hl = height(p_node->left);
+    int hr = height(p_node->right);
     p_node->height = (hl > hr ? hl : hr) + 1;
 }
 
 template <typename T>
-typename avl_tree<T>::tree_node* avl_tree<T>::Insert(avl_tree::tree_node** node, const T& new_value)
+typename avl_tree<T>::tree_node* avl_tree<T>::insert(avl_tree::tree_node** node, const T& new_value)
 {
     if (!(*node)) {
         *node = new tree_node;
@@ -361,44 +361,44 @@ typename avl_tree<T>::tree_node* avl_tree<T>::Insert(avl_tree::tree_node** node,
         return *node;
     }
     if (new_value < (*node)->_n_value) {
-        tree_node* new_node = Insert(&((*node)->left), new_value);
+        tree_node* new_node = insert(&((*node)->left), new_value);
         if ((*node)->left->parent == 0) {
             (*node)->left->parent = *node;
         }
-        Balance(*node);
+        balance(*node);
         return new_node;
     }
-    tree_node* new_node = Insert(&((*node)->right), new_value);
+    tree_node* new_node = insert(&((*node)->right), new_value);
     if ((*node)->right->parent == 0)
         (*node)->right->parent = *node;
-    Balance(*node);
+    balance(*node);
     return new_node;
 }
 
 template <typename T>
-typename avl_tree<T>::tree_node* avl_tree<T>::Insert(const T& new_value)
+typename avl_tree<T>::tree_node* avl_tree<T>::insert(const T& new_value)
 {
-    return Insert(&root_, new_value);
+    return insert(&root_, new_value);
 }
 
 template <typename T>
-void avl_tree<T>::FindAndRemove(avl_tree::tree_node* p_node, const T& key)
+void avl_tree<T>::find_and_remove(avl_tree::tree_node* p_node, const T& key)
 {
     if (!p_node)
         return;
     if (key > p_node->_n_value) {
-        FindAndRemove(p_node->right, key);
-        Balance(p_node);
+        find_and_remove(p_node->right, key);
+        balance(p_node);
     } else if (key < p_node->_n_value) {
-        FindAndRemove(p_node->left, key);
-        Balance(p_node);
+        find_and_remove(p_node->left, key);
+        balance(p_node);
     } else {
-        Remove(p_node);
+        remove(p_node);
     }
 }
 
 template <typename T>
-void avl_tree<T>::Remove(avl_tree::tree_node* p_node)
+void avl_tree<T>::remove(avl_tree::tree_node* p_node)
 {
     if (p_node == nullptr)
         return;
@@ -423,7 +423,7 @@ void avl_tree<T>::Remove(avl_tree::tree_node* p_node)
         p_node->right->parent = p_node->parent;
         delete p_node;
     } else {
-        tree_node* new_root = Max(p_node->left);
+        tree_node* new_root = max(p_node->left);
         new_root->left->parent = new_root->parent;
         new_root->parent->right = new_root->left;
         if (p_node->parent->right == p_node)
@@ -437,34 +437,34 @@ void avl_tree<T>::Remove(avl_tree::tree_node* p_node)
 }
 
 template <typename T>
-typename avl_tree<T>::tree_node* avl_tree<T>::Find(avl_tree::tree_node* p_node, const T& key)
+typename avl_tree<T>::tree_node* avl_tree<T>::find(avl_tree::tree_node* p_node, const T& key)
 {
     if (key == p_node->_n_value) {
         return p_node;
     } else {
         if ((key < p_node->_n_value) && (p_node->left != nullptr))
-            return Find(p_node->left, key);
+            return find(p_node->left, key);
         else if (p_node->right != nullptr)
-            return Find(p_node->right, key);
+            return find(p_node->right, key);
     }
     return nullptr;
 }
 
 template <typename T>
-typename avl_tree<T>::tree_node* avl_tree<T>::Find(const T& key)
+typename avl_tree<T>::tree_node* avl_tree<T>::find(const T& key)
 {
-    return Find(root_, key);
+    return find(root_, key);
 }
 
 template <typename T>
-void avl_tree<T>::FindAndRemove(const T& key)
+void avl_tree<T>::find_and_remove(const T& key)
 {
-    FindAndRemove(root_, key);
+    find_and_remove(root_, key);
 }
 
 
 template <typename T>
-typename avl_tree<T>::tree_node* avl_tree<T>::Max(avl_tree::tree_node* p_node)
+typename avl_tree<T>::tree_node* avl_tree<T>::max(avl_tree::tree_node* p_node)
 {
     if (p_node == nullptr)
         return p_node;
@@ -474,7 +474,7 @@ typename avl_tree<T>::tree_node* avl_tree<T>::Max(avl_tree::tree_node* p_node)
 }
 
 template <typename T>
-void avl_tree<T>::Copy(avl_tree::tree_node** p_dst, const avl_tree::tree_node& src)
+void avl_tree<T>::copy(avl_tree::tree_node** p_dst, const avl_tree::tree_node& src)
 {
     if (*p_dst)
         return;
@@ -482,11 +482,11 @@ void avl_tree<T>::Copy(avl_tree::tree_node** p_dst, const avl_tree::tree_node& s
     tree_node* dst = *p_dst;
     dst->_n_value = src._n_value;
     if (src.left) {
-        Copy(&(dst->left), *(src.left));
+        copy(&(dst->left), *(src.left));
         dst->left->parent = dst;
     }
     if (src.right) {
-        Copy(&(dst->right), *(src.right));
+        copy(&(dst->right), *(src.right));
         dst->right->parent = dst;
     }
 }
@@ -496,9 +496,9 @@ avl_tree<T>& avl_tree<T>::operator =(const avl_tree& that)
 {
     if (this == &that)
         return *this;
-    this->Destroy();
+    this->destroy();
     if (that.root_)
-        Copy(&(this->root_), *(that.root_));
+        copy(&(this->root_), *(that.root_));
     return *this;
 }
 

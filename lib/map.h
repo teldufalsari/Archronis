@@ -87,20 +87,20 @@ inline bool operator ==(const pair_t<KeyT, ValT>& lht, const pair_t<KeyT, ValT>&
  * @details This container is based on an AVL binary search tree algorithm. Key type in the pair must have overloaded comparision operators.
  */
 template <typename KeyT, typename ValT>
-class map_t
+class map
 {
 public:
     typedef typename tld::avl_tree<pair_t<KeyT, ValT> >::tree_node node_t;
 
 private:
     tld::avl_tree<pair_t<KeyT, ValT> > m_tree_;
-    node_t* Find(const KeyT& key, node_t* p_node);
+    node_t* find(const KeyT& key, node_t* p_node);
 
 public:
     /**
      * @brief Creates an empty map with an empty tree.
      */
-    map_t();
+    map();
 
     /**
      * @brief Copy constructor.
@@ -108,26 +108,26 @@ public:
      * @details Recursively copies pairs stored in the source object to
      * the destination object.
      */
-    map_t(const map_t& that);
+    map(const map& that);
 
     /**
      * @brief Move constructor
      * @param that Reference to the source object.
      */
-    map_t(map_t&& that) noexcept;
-    ~map_t();
+    map(map&& that) noexcept;
+    ~map();
 
     /**
      * @brief Inserts pair of suitable type into a map.
      * @param _x Reference to the pair object.
      */
-    void Insert(const pair_t<KeyT, ValT>& _x);
+    void insert(const pair_t<KeyT, ValT>& _x);
 
     /**
      * @brief Removes the pair with provided key from the map.
      * @param key
      */
-    void Erase(const KeyT& key);
+    void erase(const KeyT& key);
 
     /**
      * @brief Retrieves a value by a key.
@@ -139,25 +139,25 @@ public:
      * such key and default value is created. Reference to this pair's value
      * is returned.
      */
-    ValT& Find(const KeyT& key);
+    ValT& find(const KeyT& key);
 
     /**
      * @brief Empties map object by recursively freeing allocated memory.
      */
-    void Clear();
+    void clear();
 
     /**
      * @brief Says whether map object is empty or not.
      * @return True if empty, false if not.
      */
-    bool Empty();
+    bool empty();
 
     /**
      * @brief Searches the map for elements with a specified key and returns the number of matches
      * @param key key to search for
      * @return For a map the value either 0 or 1
      */
-    unsigned Count(const KeyT& key);
+    unsigned count(const KeyT& key);
 
     /**
      * @brief An access operator. Retrieves a value by a key.
@@ -176,13 +176,13 @@ public:
      * @details Recursively copies pairs stored in the source object to
      * the destination object.
      */
-    map_t& operator =(const map_t& that);
+    map& operator =(const map& that);
 
     /**
      * @brief Move assignment operator
      * @param that Reference to the source object.
      */
-    map_t& operator =(map_t&& that) noexcept;
+    map& operator =(map&& that) noexcept;
 
     /**
      * @brief Comparision operator for map type.
@@ -191,7 +191,7 @@ public:
      * @return The result of comparision of the trees.
      * @details It is used to avoid self-assignment.
      */
-    friend inline bool operator ==(const map_t<KeyT, ValT>& lht, const map_t<KeyT, ValT>& rht)
+    friend inline bool operator ==(const map<KeyT, ValT>& lht, const map<KeyT, ValT>& rht)
     {
         return (lht.m_tree_ == rht.m_tree_);
     }
@@ -255,45 +255,45 @@ pair_t<KeyT, ValT>::~pair_t() = default;
 // ### MAP ###
 
 template <typename KeyT, typename ValT>
-map_t<KeyT, ValT>::map_t() = default;
+map<KeyT, ValT>::map() = default;
 
 template <typename KeyT, typename ValT>
-map_t<KeyT, ValT>::~map_t() = default;
+map<KeyT, ValT>::~map() = default;
 
 template <typename KeyT, typename ValT>
-ValT& map_t<KeyT, ValT>::Find(const KeyT& key)
+ValT& map<KeyT, ValT>::find(const KeyT& key)
 {
-    node_t* res_node = Find(key, m_tree_.root_);
+    node_t* res_node = find(key, m_tree_.root_);
     if (res_node)
         return res_node->_n_value._p_value;
     pair_t<KeyT, ValT> n_node(key);
-    return (m_tree_.Insert(n_node))->_n_value._p_value;
+    return (m_tree_.insert(n_node))->_n_value._p_value;
 }
 
 template <typename KeyT, typename ValT>
-typename map_t<KeyT, ValT>::node_t* map_t<KeyT, ValT>::Find(const KeyT& key, map_t::node_t* p_node)
+typename map<KeyT, ValT>::node_t* map<KeyT, ValT>::find(const KeyT& key, map::node_t* p_node)
 {
     if (p_node == nullptr)
         return nullptr;
     if (key == p_node->_n_value._p_key)
         return p_node;
     if (key < p_node->_n_value._p_key)
-        return Find(key, p_node->left);
-    return Find(key, p_node->right);
+        return find(key, p_node->left);
+    return find(key, p_node->right);
 }
 
 template <typename KeyT, typename ValT>
-ValT& map_t<KeyT, ValT>::operator [](const KeyT& key)
+ValT& map<KeyT, ValT>::operator [](const KeyT& key)
 {
-    node_t* res_node = Find(key, m_tree_.root_);
+    node_t* res_node = find(key, m_tree_.root_);
     if (res_node)
         return res_node->_n_value._p_value;
     pair_t<KeyT, ValT> n_node(key);
-    return (m_tree_.Insert(n_node))->_n_value._p_value;
+    return (m_tree_.insert(n_node))->_n_value._p_value;
 }
 
 template <typename KeyT, typename ValT>
-map_t<KeyT, ValT>& map_t<KeyT, ValT>::operator =(const map_t& that)
+map<KeyT, ValT>& map<KeyT, ValT>::operator =(const map& that)
 {
     if (this != &that)
         this->m_tree_ = that.m_tree_;
@@ -301,53 +301,53 @@ map_t<KeyT, ValT>& map_t<KeyT, ValT>::operator =(const map_t& that)
 }
 
 template <typename KeyT, typename ValT>
-map_t<KeyT, ValT>& map_t<KeyT, ValT>::operator =(map_t&& that) noexcept
+map<KeyT, ValT>& map<KeyT, ValT>::operator =(map&& that) noexcept
 {
     this->m_tree_ = std::move(that.m_tree_);
     return *this;
 }
 
 template <typename KeyT, typename ValT>
-map_t<KeyT, ValT>::map_t(const map_t& that) :
+map<KeyT, ValT>::map(const map& that) :
     m_tree_(that.m_tree_)
 {}
 
 template <typename KeyT, typename ValT>
-map_t<KeyT, ValT>::map_t(map_t&& that) noexcept :
+map<KeyT, ValT>::map(map&& that) noexcept :
     m_tree_(std::move(that.m_tree_))
 {}
 
 template <typename KeyT, typename ValT>
-void map_t<KeyT, ValT>::Erase(const KeyT& key)
+void map<KeyT, ValT>::erase(const KeyT& key)
 {
-    m_tree_.FindAndRemove(key);
+    m_tree_.find_and_remove(key);
 }
 
 template <typename KeyT, typename ValT>
-void map_t<KeyT, ValT>::Clear()
+void map<KeyT, ValT>::clear()
 {
-    m_tree_.Destroy();
+    m_tree_.destroy();
 }
 
 template <typename KeyT, typename ValT>
-bool map_t<KeyT, ValT>::Empty()
+bool map<KeyT, ValT>::empty()
 {
     return (m_tree_.root_ == nullptr);
 }
 
 template <typename KeyT, typename ValT>
-unsigned map_t<KeyT, ValT>::Count(const KeyT& key)
+unsigned map<KeyT, ValT>::count(const KeyT& key)
 {
-    if (Find(key, m_tree_.root_) != nullptr)
+    if (find(key, m_tree_.root_) != nullptr)
         return 1;
     else
         return 0;
 }
 
 template <typename KeyT, typename ValT>
-void map_t<KeyT, ValT>::Insert(const pair_t<KeyT, ValT>& _x)
+void map<KeyT, ValT>::insert(const pair_t<KeyT, ValT>& _x)
 {
-    m_tree_.Insert(_x);
+    m_tree_.insert(_x);
 }
 
 template <typename KeyT, typename ValT>
