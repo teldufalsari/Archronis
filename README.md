@@ -1,10 +1,10 @@
-# Rat
+# Archronis
 Simple file archiver and compressor.
 
 ## Usage
-./rat pack file1 [file2] [file3] ... output_file
+`archronis pack file1 [file2] [file3] ... output_file`
 
-./rat unpack archive_file
+`archronis unpack archive_file`
 
 ## Description
 Rat is an archiving program that stores multiple files compressed in a single compressed file.

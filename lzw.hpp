@@ -1,5 +1,5 @@
-#ifndef RAT_LZW_H
-#define RAT_LZW_H
+#ifndef ARCHRONIS_LZW_HPP
+#define ARCHRONIS_LZW_HPP
 #include <string>
 #include "lib/map.h"
 #include "lib/vector.h"
@@ -19,10 +19,11 @@ enum errors {
     ERR_ALLOC,
     ERR_FS_ERROR,
     ERR_READ,
-    ERR_WRITE,
+    ERR_FSTREAM,
     ERR_DECODE,
     ERR_NOT_ARCH,
-    ERR_CRC
+    ERR_CRC,
+    ERR_CREATE
 };
 
 const byte_str EMPTY_STR = byte_str(1, std::byte(0));
@@ -92,10 +93,4 @@ static inline void unpack_pair(const std::byte* in_buf, pos_t* out_buf)
  */
 unsigned crc32(const std::byte* data_buf, std::size_t data_size);
 
-/**
- * @brief Generate table for calculating CRC-32 checksum
- * @details It is used by crc32 function and must be used only by it.
- */
-static void crc_generate_table(unsigned* table);
-
-#endif // RAT_LZW_H
+#endif // ARCHRONIS_LZW_HPP

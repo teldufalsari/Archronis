@@ -1,5 +1,5 @@
-#ifndef RAT_COMPRESSOR_H
-#define RAT_COMPRESSOR_H
+#ifndef ARCHRONIS_COMPRESSOR_HPP
+#define ARCHRONIS_COMPRESSOR_HPP
 #include "lib/byte_str.h"
 #include "lzw.hpp"
 #include "lib/vector.h"
@@ -59,4 +59,4 @@ public:
     int decompressFile(std::ifstream& input_fs, std::ofstream& output_fs);
 };
 
-#endif // RAT_COMPRESSOR_H
+#endif // ARCHRONIS_COMPRESSOR_HPP

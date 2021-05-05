@@ -76,6 +76,10 @@ size_t pack(tld::vector<pos_t>& input, byte_str& output)
     return out_size;
 }
 
+/**
+ * @brief Generate table for calculating CRC-32 checksum
+ * @details It is used by crc32 function and must be used only by it.
+ */
 static void crc_generate_table(unsigned* table)
 {
     for (unsigned i = 0; i < 256; i++) {
