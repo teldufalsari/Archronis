@@ -5,9 +5,14 @@
 #include "lzw.hpp"
 #include "compressor.hpp"
 namespace fs = std::filesystem;
+/**
+ * @file main.cpp
+ * @brief Main control logic for the program
+ */
 
 const char COMPRESSED_SIGNATURE[8] = "archr04";
 
+/// 
 struct arc_metadata {
     fs::file_status status;
     std::uintmax_t size;
@@ -43,6 +48,12 @@ std::string ArcStrerror(const std::string& file_name, int err_code)
     }
 }
 
+/**
+ * @brief Find file and try to open it as a regular for reading
+ * @param file_name path to file
+ * @param file_stream input stream to associate file with
+ * @return Zero on success, otherwise non-zero error code
+ */
 int TryOpenArchive(const std::string& file_name, std::ifstream& file_stream)
 {
     if (!fs::exists(file_name)) {
@@ -61,6 +72,12 @@ int TryOpenArchive(const std::string& file_name, std::ifstream& file_stream)
     return OK;
 }
 
+/**
+ * @brief Gather metatada of given list of files
+ * @param meta vector where mwtadata structires will be stored
+ * @param names list of paths to files
+ * @return Zero on success, otherwise non-zero error code
+ */
 int GatherMetadata(tld::vector<arc_metadata>& meta, const tld::vector<std::string> names)
 {
     int ret = OK;
@@ -91,6 +108,13 @@ int GatherMetadata(tld::vector<arc_metadata>& meta, const tld::vector<std::strin
     return ret;
 }
 
+/**
+ * @brief Open file and write compressed data into output stream associated with archive file
+ * @param name path to file
+ * @param metadata file metadata for archiving
+ * @param output_fs output stream
+ * @return Zero on success, otherwise non-zero error code
+ */
 int CompressFile(const std::string& name, const arc_metadata& metadata, std::ofstream& output_fs)
 {
     std::ifstream input_fs(name);
@@ -106,6 +130,12 @@ int CompressFile(const std::string& name, const arc_metadata& metadata, std::ofs
     return state;
 }
 
+/**
+ * @brief Create file from a record in the archive
+ * @param input_fs file stream associated with the archive
+ * @param compr compressor instance
+ * @return Zero on success, otherwise non-zero error code
+ */
 int DecompressFile(std::ifstream& input_fs, compressor& compr)
 {
     arc_metadata cur_metadata = {};
@@ -139,6 +169,12 @@ int DecompressFile(std::ifstream& input_fs, compressor& compr)
     return state;
 }
 
+/**
+ * @brief Run Archronis in packing mode
+ * @param count number of input files, archive counts
+ * @param names array of C-string containng input names and archive name
+ * @returns exit code
+ */
 int PackMode(int count, char* names[])
 {
     int input_count = count - 1;
@@ -169,6 +205,11 @@ int PackMode(int count, char* names[])
     return OK;
 }
 
+/**
+ * @brief Run Archronis in unpacking mode
+ * @param name C-string - path to archive
+ * @return exit code
+ */
 int UnpackMode(const char* name)
 {
     std::string arch_name(name);
@@ -196,7 +237,6 @@ int UnpackMode(const char* name)
     }
     return OK;
 }
-
 
 int main(int argc, char* argv[])
 {

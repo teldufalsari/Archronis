@@ -33,9 +33,9 @@ typedef unsigned short pos_t;
 
 /**
  * @brief Compress block of data
- * @param input Byte array of data to compress
- * @param input_size size of the input array in sizeof(char)
- * @param result Output vector where compressed data is stored
+ * @param input byte array of data to compress
+ * @param input_size size of the input array in bytes
+ * @param result output vector where compressed data is stored
  * @details Data in stored in 16-bit code words.
  * Use function pack() to pack data into array of 12-bit sequences
  * All data that was stored in the output vector is cleared.
@@ -44,8 +44,8 @@ void compress(const byte_str& input, size_t input_size, tld::vector<pos_t>& resu
 
 /**
  * @brief Pack compressed data densely
- * @param input Input vector of compressed data
- * @param output Pointer to the array of output data.
+ * @param input input vector of compressed data
+ * @param output string to store output data.
  */
 size_t pack(tld::vector<pos_t>& input, byte_str& output);
 
