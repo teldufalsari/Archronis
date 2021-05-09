@@ -64,7 +64,7 @@ int TryOpenArchive(const std::string& file_name, std::ifstream& file_stream)
         std::cout << "File '" << file_name << "' can't be an archive file: not a regular file" << std::endl;
         return ERR_NOT_REG;
     }
-    file_stream.open(file_name);
+    file_stream.open(file_name, std::ios::in | std::ios::binary);
     if (!file_stream.is_open()) {
         std::cout << "Could not open file '" << file_name << "' for extracting" << std::endl;
         return ERR_OPEN;
@@ -117,7 +117,7 @@ int GatherMetadata(tld::vector<arc_metadata>& meta, const tld::vector<std::strin
  */
 int CompressFile(const std::string& name, const arc_metadata& metadata, std::ofstream& output_fs)
 {
-    std::ifstream input_fs(name);
+    std::ifstream input_fs(name, std::ios::in | std::ios::binary);
     if (!input_fs.is_open()) {
         return ERR_OPEN;
     }
@@ -151,7 +151,7 @@ int DecompressFile(std::ifstream& input_fs, compressor& compr)
     cur_name_buf[cur_metadata.name_size] = '\0';
     std::string cur_name(cur_name_buf);
     delete[] cur_name_buf;
-    std::ofstream output_fs(cur_name);
+    std::ofstream output_fs(cur_name, std::ios::out | std::ios::binary);
     if (!output_fs.is_open())
         return ERR_CREATE;
     int state = compr.decompressFile(input_fs, output_fs);
@@ -188,7 +188,7 @@ int PackMode(int count, char* names[])
         std::cout << "Could not create an archive due to previous errors" << std::endl;
         return state;
     }
-    std::ofstream output_fs(arch_name);
+    std::ofstream output_fs(arch_name, std::ios::out | std::ios::binary);
     if (!output_fs.is_open()) {
         std::cout << "Could not open file '" << arch_name << "' for writing the archive" << std::endl;
         return ERR_OPEN;
