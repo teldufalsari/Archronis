@@ -1,5 +1,6 @@
 #ifndef TLD_VECTOR_H
 #define TLD_VECTOR_H
+#include <utility>
 
 namespace tld {
 /**
@@ -9,7 +10,7 @@ namespace tld {
 template <typename T>
 class vector
 {
-const size_t DEFAULT_CAPACITY = 16UL;
+const std::size_t DEFAULT_CAPACITY = 16UL;
 
 /**
  * @brief This structure is thrown as an exception when trying to access not allocated memory using at() method
@@ -17,15 +18,15 @@ const size_t DEFAULT_CAPACITY = 16UL;
  * @param pos Data position that was attempted to access
  */
 struct out_of_range {
-    size_t capacity;
-    size_t pos;
-    out_of_range(size_t _capacity, size_t _pos) :capacity(_capacity), pos(_pos) {}
+    std::size_t capacity;
+    std::size_t pos;
+    out_of_range(std::size_t _capacity, std::size_t _pos) :capacity(_capacity), pos(_pos) {}
 };
 
 private:
     T* m_data_;
-    size_t size_;
-    size_t capacity_;
+    std::size_t size_;
+    std::size_t capacity_;
 
 public:
     /// @brief Constructs vector with some pre-allocated space and default values
@@ -35,7 +36,7 @@ public:
      * @brief Creates vector with specified preallocated space and default values
      * @param capacity initial vector capacity
      */
-    explicit vector(size_t capacity);
+    explicit vector(std::size_t capacity);
 
     /**
      * @brief Copy constructor
@@ -70,25 +71,25 @@ public:
      * @brief Fast random access operator without boundary check
      * @param pos position of the element
      */
-    T& operator[](size_t pos) noexcept;
+    T& operator[](std::size_t pos) noexcept;
 
     /**
      * @brief Fast random access operator without boundary check
      * @param pos position of the element
      */
-    const T& operator[](size_t pos) const noexcept;
+    const T& operator[](std::size_t pos) const noexcept;
 
     /**
      * @brief Random access method with boundary check
      * @param pos position of the element
      */
-    T& at(size_t pos);
+    T& at(std::size_t pos);
 
     /**
      * @brief Random access method with boundary check
      * @param pos position of the element
      */
-    const T& at(size_t pos) const;
+    const T& at(std::size_t pos) const;
 
     /// @brief Get access to the underlying data array
     T* data();
@@ -114,23 +115,23 @@ public:
     bool empty() const;
 
     /// @brief Get capacity (max number of elements that can be stored without additional allocation)
-    size_t capacity() const;
+    std::size_t capacity() const;
 
     /// @brief Get count of elements in the vector
-    size_t size() const;
+    std::size_t size() const;
 
     /**
      * @brief Allocate additional memory. If capacity is already big enough, vector shall not shrink
      * @param new_capacity
      */
-    void reserve(size_t new_capacity);
+    void reserve(std::size_t new_capacity);
 
     /**
      * @brief Change size of the vector. Elements that do not fit into new size will be destructed,
      * but capacity will not be reduced.
      * @param new_size
      */
-    void resize(size_t new_size);
+    void resize(std::size_t new_size);
 
     /// Make capacity equal to the size of the vector
     void shrink();
@@ -144,7 +145,7 @@ vector<T>::vector() :
 {}
 
 template <typename T>
-vector<T>::vector(size_t capacity) :
+vector<T>::vector(std::size_t capacity) :
     m_data_(new T[capacity]),
     size_(0),
     capacity_(capacity)
@@ -156,7 +157,7 @@ vector<T>::vector(const vector<T>& that) :
     size_(that.size_),
     capacity_(that.capacity_)
 {
-    for (size_t i = 0; i < size_; i++)
+    for (std::size_t i = 0; i < size_; i++)
         m_data_[i] = that.m_data_[i];
 }
 
@@ -186,7 +187,7 @@ vector<T>& vector<T>::operator =(const vector<T>& that)
     this->m_data_ = new T[that.capacity_];
     this->capacity_ = that.capacity_;
     this->size_ = that.size_;
-    for (size_t i = 0; i < size_; i++)
+    for (std::size_t i = 0; i < size_; i++)
         this->m_data_[i] = that.m_data_[i];
     return *this;
 }
@@ -209,37 +210,37 @@ bool vector<T>::empty() const
 }
 
 template <typename T>
-size_t vector<T>::capacity() const
+std::size_t vector<T>::capacity() const
 {
     return capacity_;
 }
 
 template <typename T>
-size_t vector<T>::size() const
+std::size_t vector<T>::size() const
 {
     return size_;
 }
 
 template <typename T>
-void vector<T>::reserve(size_t new_capacity)
+void vector<T>::reserve(std::size_t new_capacity)
 {
     if (this->capacity_ >= new_capacity)
         return;
     T* temp_buf = new T[new_capacity];
-    for (size_t i = 0; i < size_; i++)
-        temp_buf[i] = m_data_[i];
+    for (std::size_t i = 0; i < size_; i++)
+        temp_buf[i] = std::move(m_data_[i]);
     delete[] m_data_;
     m_data_ = temp_buf;
     capacity_ = new_capacity;
 }
 
 template <typename T>
-void vector<T>::resize(size_t new_size)
+void vector<T>::resize(std::size_t new_size)
 {
     if (capacity_ < new_size)
         reserve(new_size);
     if (new_size < size_)
-        for (size_t i = new_size; i < size_; i++)
+        for (std::size_t i = new_size; i < size_; i++)
             m_data_[i].~T();
     size_ = new_size;
 }
@@ -256,7 +257,7 @@ void vector<T>::push_back(const T& elem)
 }
 
 template <typename T>
-T& vector<T>::at(size_t pos)
+T& vector<T>::at(std::size_t pos)
 {
     if (pos >= size_)
         throw out_of_range(capacity_, pos);
@@ -264,7 +265,7 @@ T& vector<T>::at(size_t pos)
 }
 
 template <typename T>
-const T& vector<T>::at(size_t pos) const
+const T& vector<T>::at(std::size_t pos) const
 {
     if (pos >= size_)
         throw out_of_range(capacity_, pos);
@@ -272,13 +273,13 @@ const T& vector<T>::at(size_t pos) const
 }
 
 template <typename T>
-T& vector<T>::operator [](size_t pos) noexcept
+T& vector<T>::operator [](std::size_t pos) noexcept
 {
     return m_data_[pos];
 }
 
 template <typename T>
-const T& vector<T>::operator [](size_t pos) const noexcept
+const T& vector<T>::operator [](std::size_t pos) const noexcept
 {
     return m_data_[pos];
 }
@@ -319,7 +320,7 @@ void vector<T>::shrink()
     if (capacity_ == size_)
         return;
     T* temp_buf = new T[size_];
-    for (size_t i = 0; i < size_; i++)
+    for (std::size_t i = 0; i < size_; i++)
         temp_buf[i] = m_data_[i];
     delete[] m_data_;
     m_data_ = temp_buf;

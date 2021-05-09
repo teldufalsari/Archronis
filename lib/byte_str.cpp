@@ -11,8 +11,7 @@ byte_str::byte_str(std::size_t count, std::byte elem) :
     size_(count),
     capacity_(count)
 {
-    for (std::size_t i = 0; i < size_; i++)
-        data_[i] = elem;
+   memset(data_, int(elem), count); 
 }
 
 byte_str::byte_str(std::size_t initial_capacity) :
