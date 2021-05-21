@@ -155,6 +155,7 @@ int DecompressFile(std::ifstream& input_fs, compressor& compr)
     if (!output_fs.is_open())
         return ERR_CREATE;
     int state = compr.decompressFile(input_fs, output_fs);
+    input_fs.close();
     if (state == OK && (!input_fs.good() || !output_fs.good()))
         state = ERR_FSTREAM;
     if (state != OK)
